@@ -42,7 +42,7 @@ def create_app():
 
     @app.route('/api/registration/', methods=['GET'])
     def register():
-        values = request.get_json()
+        values = request.args
         required = ['username', 'password1', 'password2']
 
         if not all(k in values for k in required):
@@ -61,7 +61,7 @@ def create_app():
 
     @app.route('/api/login/', methods=['GET'])
     def login():
-        values = request.get_json()
+        values = request.args
 
         user = world.authenticate_user(values.get('username'),
                                        values.get('password'))
@@ -70,14 +70,14 @@ def create_app():
             response = {"error": "Username or password incorrect."}
             return jsonify(response), 500
         
-        response = {"Authorization": user.auth_key}
+        response = {"key": user.auth_key}
         return jsonify(response), 200
 
 
 
     @app.route('/api/adv/init/', methods=['GET'])
     def init():
-        player = get_player_by_header(world, request.headers.get("Authorization"))
+        player = world.get_player_by_auth(request.headers.get("Authorization"))
         if player is None:
             response = {'error': "Malformed auth header"}
             return jsonify(response), 500
@@ -91,12 +91,12 @@ def create_app():
 
     @app.route('/api/adv/move/', methods=['GET'])
     def move():
-        player = get_player_by_header(world, request.headers.get("Authorization"))
+        player = world.get_player_by_auth(request.headers.get("Authorization"))
         if player is None:
             response = {'error': "Malformed auth header"}
             return jsonify(response), 500
 
-        values = request.get_json()
+        values = request.args
         required = ['direction']
 
         if not all(k in values for k in required):
