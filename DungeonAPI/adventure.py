@@ -4,16 +4,16 @@ from time import time
 from uuid import uuid4
 
 from flask import Flask, jsonify, request, render_template
-from pusher import Pusher
+#from pusher import Pusher
 from decouple import config
 
-from room import Room
-from player import Player
-from world import World
+from DungeonAPI.room import Room
+from DungeonAPI.player import Player
+from DungeonAPI.world import World
 
 def create_app():
     # Look up decouple for config variables
-    pusher = Pusher(app_id=config('PUSHER_APP_ID'), key=config('PUSHER_KEY'), secret=config('PUSHER_SECRET'), cluster=config('PUSHER_CLUSTER'))
+    #pusher = Pusher(app_id=config('PUSHER_APP_ID'), key=config('PUSHER_KEY'), secret=config('PUSHER_SECRET'), cluster=config('PUSHER_CLUSTER'))
 
     world = World()
 
@@ -40,7 +40,7 @@ def create_app():
         return player
 
 
-    @app.route('/api/registration/', methods=['POST'])
+    @app.route('/api/registration/', methods=['GET'])
     def register():
         values = request.get_json()
         required = ['username', 'password1', 'password2']
@@ -59,11 +59,20 @@ def create_app():
         else:
             return jsonify(response), 200
 
-    @app.route('/api/login/', methods=['POST'])
+    @app.route('/api/login/', methods=['GET'])
     def login():
-        # IMPLEMENT THIS
-        response = {'error': "Not implemented"}
-        return jsonify(response), 400
+        values = request.get_json()
+
+        user = world.authenticate_user(values.get('username'),
+                                       values.get('password'))
+
+        if user is None:
+            response = {"error": "Username or password incorrect."}
+            return jsonify(response), 500
+        
+        response = {"Authorization": user.auth_key}
+        return jsonify(response), 200
+
 
 
     @app.route('/api/adv/init/', methods=['GET'])
@@ -80,7 +89,7 @@ def create_app():
         return jsonify(response), 200
 
 
-    @app.route('/api/adv/move/', methods=['POST'])
+    @app.route('/api/adv/move/', methods=['GET'])
     def move():
         player = get_player_by_header(world, request.headers.get("Authorization"))
         if player is None:
@@ -108,13 +117,13 @@ def create_app():
             return jsonify(response), 500
 
 
-    @app.route('/api/adv/take/', methods=['POST'])
+    @app.route('/api/adv/take/', methods=['GET'])
     def take_item():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
         return jsonify(response), 400
 
-    @app.route('/api/adv/drop/', methods=['POST'])
+    @app.route('/api/adv/drop/', methods=['GET'])
     def drop_item():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
@@ -126,13 +135,13 @@ def create_app():
         response = {'error': "Not implemented"}
         return jsonify(response), 400
 
-    @app.route('/api/adv/buy/', methods=['POST'])
+    @app.route('/api/adv/buy/', methods=['GET'])
     def buy_item():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
         return jsonify(response), 400
 
-    @app.route('/api/adv/sell/', methods=['POST'])
+    @app.route('/api/adv/sell/', methods=['GET'])
     def sell_item():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}

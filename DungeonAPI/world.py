@@ -1,5 +1,5 @@
-from room import Room
-from player import Player
+from DungeonAPI.room import Room
+from DungeonAPI.player import Player
 import random
 import math
 import bcrypt
