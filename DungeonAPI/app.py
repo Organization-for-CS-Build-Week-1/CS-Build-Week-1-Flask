@@ -152,3 +152,5 @@ def create_app():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
         return jsonify(response), 400
+
+    return app
