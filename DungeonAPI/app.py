@@ -11,6 +11,8 @@ from DungeonAPI.room import Room
 from DungeonAPI.player import Player
 from DungeonAPI.world import World
 
+from DungeonAPI.models import DB
+
 def create_app():
     # Look up decouple for config variables
     #pusher = Pusher(app_id=config('PUSHER_APP_ID'), key=config('PUSHER_KEY'), secret=config('PUSHER_SECRET'), cluster=config('PUSHER_CLUSTER'))
@@ -18,6 +20,16 @@ def create_app():
     world = World()
 
     app = Flask(__name__)
+
+
+    # Add config for database
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
+
+    # Stop tracking modifications on sqlalchemy config
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    DB.init_app(app)
+    
 
     @app.after_request
     def after_request(response):
@@ -59,6 +71,7 @@ def create_app():
         else:
             return jsonify(response), 200
 
+
     @app.route('/api/login/', methods=['GET'])
     def login():
         values = request.args
@@ -73,6 +86,67 @@ def create_app():
         response = {"key": user.auth_key}
         return jsonify(response), 200
 
+
+    @app.route('/api/debug/', methods=['GET'])
+    def debug():
+        player = world.get_player_by_auth(request.headers.get("Authorization"))
+        if player is None:
+            response = {'error': "Malformed auth header"}
+            return jsonify(response), 500
+        if not player.admin_q:
+            response = {'error': "User not authorized"}
+            return jsonify(response), 500
+
+        response = {'str': "Authority accepted."}
+        return jsonify(response), 200
+
+
+    @app.route('/api/debug/save/', methods=['GET'])
+    def save():
+        player = world.get_player_by_auth(request.headers.get("Authorization"))
+        if player is None:
+            response = {'error': "Malformed auth header"}
+            return jsonify(response), 500
+        if not player.admin_q:
+            response = {'error': "User not authorized"}
+            return jsonify(response), 500
+
+        world.save_to_db(DB)
+
+        response = {'str': "Successfully saved world."}
+        return jsonify(response), 200
+
+
+    @app.route('/api/debug/load/', methods=['GET'])
+    def load():
+        player = world.get_player_by_auth(request.headers.get("Authorization"))
+        if player is None:
+            response = {'error': "Malformed auth header"}
+            return jsonify(response), 500
+        if not player.admin_q:
+            response = {'error': "User not authorized"}
+            return jsonify(response), 500
+
+        world.load_from_db(DB)
+
+        response = {'str': "Successfully loaded world."}
+        return jsonify(response), 200
+
+
+    @app.route('/api/debug/reset/', methods=['GET'])
+    def reset():
+        player = world.get_player_by_auth(request.headers.get("Authorization"))
+        if player is None:
+            response = {'error': "Malformed auth header"}
+            return jsonify(response), 500
+        if not player.admin_q:
+            response = {'error': "User not authorized"}
+            return jsonify(response), 500
+
+        world.create_world()
+
+        response = {'str': "Successfully reset world."}
+        return jsonify(response), 200
 
 
     @app.route('/api/adv/init/', methods=['GET'])
@@ -123,11 +197,13 @@ def create_app():
         response = {'error': "Not implemented"}
         return jsonify(response), 400
 
+
     @app.route('/api/adv/drop/', methods=['GET'])
     def drop_item():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
         return jsonify(response), 400
+
 
     @app.route('/api/adv/inventory/', methods=['GET'])
     def inventory():
@@ -135,11 +211,13 @@ def create_app():
         response = {'error': "Not implemented"}
         return jsonify(response), 400
 
+
     @app.route('/api/adv/buy/', methods=['GET'])
     def buy_item():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
         return jsonify(response), 400
+
 
     @app.route('/api/adv/sell/', methods=['GET'])
     def sell_item():
@@ -147,10 +225,12 @@ def create_app():
         response = {'error': "Not implemented"}
         return jsonify(response), 400
 
+
     @app.route('/api/adv/rooms/', methods=['GET'])
     def rooms():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
         return jsonify(response), 400
+
 
     return app
