@@ -115,6 +115,8 @@ class World:
 
           #items += zip(r.items, [r.inventory_id] * len(r.items))
 
+        DB.session.commit()
+
         for p in self.players.values():
           new_user = Users(p.username, p.current_room.id, p.password_hash, p.auth_key, p.admin_q) #, p.inventory_id)
           DB.session.add(new_user)
