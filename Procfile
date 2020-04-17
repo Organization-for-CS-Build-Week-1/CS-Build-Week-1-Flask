@@ -1,1 +1,1 @@
-web: gunicorn --workers=1 create_app:app
+web: gunicorn --workers=1 DungeonAPI:APP
