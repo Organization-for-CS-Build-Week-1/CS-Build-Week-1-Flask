@@ -2,7 +2,7 @@ import os
 import requests
 import json
 
-main_url = 'http://127.0.0.1:5000'
+main_url = 'https://safe-reef-80226.herokuapp.com/'
 
 def make_request(dir, params=None, headers=None):
     url = main_url + dir
