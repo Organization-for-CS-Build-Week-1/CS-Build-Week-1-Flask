@@ -25,7 +25,7 @@ class World:
         elif self.get_player_by_username(username) is not None:
             return {'error': "Username already exists"}
         password_hash = bcrypt.hashpw(password1.encode(), self.password_salt)
-        player = Player(username, self.starting_room, password_hash, admin_q = len(self.players) == 0)
+        player = Player(username, list(self.rooms.values())[0], password_hash, admin_q = len(self.players) == 0)
         self.players[player.auth_key] = player
         return {'key': player.auth_key}
 
