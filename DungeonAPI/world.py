@@ -14,6 +14,7 @@ class World:
         self.players = {}
         self.create_world()
         self.password_salt = bcrypt.gensalt()
+        self.loaded = False
 
     def add_player(self, username, password1, password2):
         if password1 != password2:

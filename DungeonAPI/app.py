@@ -51,6 +51,18 @@ def create_app():
         player = world.get_player_by_auth(auth_key[1])
         return player
 
+    @app.route('/api/check/')
+    def check():
+        # Check if server is running and load world.
+        if not world.loaded:
+            try:
+              world.load_from_db(DB)
+            except Exception:
+              pass
+              
+            world.loaded = True
+              
+        return jsonify({}), 200
 
     @app.route('/api/registration/', methods=['GET'])
     def register():
