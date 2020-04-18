@@ -46,7 +46,7 @@ class World:
         user = self.get_player_by_username(username)
         if user is None:
             return None
-        password_hash = bcrypt.hashpw(password.encode() ,self.password_salt)
+        password_hash = bcrypt.hashpw(password.encode(), self.password_salt)
         if user.password_hash == password_hash:
             return user
         return None
