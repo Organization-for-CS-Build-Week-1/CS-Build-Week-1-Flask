@@ -29,7 +29,7 @@ class Users(DB.Model):
     """Player data"""
     id = DB.Column(DB.Integer, primary_key=True)
     user_name = DB.Column(DB.Text, nullable=False)
-    password_hash = DB.Column(DB.CHAR(60), nullable=False)
+    password_hash = DB.Column(DB.Text, nullable=False)
     auth_key = DB.Column(DB.Text, nullable=False)
     admin_q = DB.Column(DB.Boolean, nullable=False)
     current_room_id = DB.Column(DB.Integer, DB.ForeignKey("rooms.id"), nullable=False)
