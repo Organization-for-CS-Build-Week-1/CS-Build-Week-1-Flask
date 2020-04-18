@@ -47,8 +47,6 @@ class World:
         if user is None:
             return None
         password_hash = bcrypt.hashpw(password.encode(), self.password_salt)
-        print("Expected hash:", user.password_hash)
-        print("Given hash:", password_hash)
         if user.password_hash == password_hash:
             return user
         return None
