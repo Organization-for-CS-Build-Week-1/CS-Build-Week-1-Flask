@@ -1,7 +1,8 @@
 import random
+from room import Room
 
 class Map:
-    def __init__(self, size, room_limit):
+    def __init__(self, size, room_limit, rooms):
         self.grid = []
         row = [0] * size
         for i in range(size):
@@ -12,11 +13,18 @@ class Map:
         self.set_room(self.center, self.center)
         self.size = size
         self.room_limit = room_limit
-    
+
+    def create_room(y, x):
+        id = int(f"{str(y)}{str(x)}")
+        name = f"Room #{id}"
+        description = f"The description for {name}."
+        return Room(name, description, id, x, y)
+
     def set_room(self, y, x):
         if self.grid[y][x] != 1:
             self.grid[y][x] = 1
             self.rooms += 1
+            rooms.update({(y, x): create_room(y, x)})
 
     def generate_rooms(self):
         walkers = [
@@ -30,7 +38,6 @@ class Map:
                 if self.rooms == self.room_limit:
                     break
                 walker.act()
-        print('rooms', self.rooms)
 
 class Walker:
     def __init__(self, map, mode, y=0, x=0):
