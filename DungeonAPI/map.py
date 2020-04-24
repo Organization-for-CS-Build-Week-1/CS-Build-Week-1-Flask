@@ -9,7 +9,7 @@ class Map:
             row = row.copy()
             self.grid.append(row)
         self.center = size//2
-        self.rooms = 0
+        self.room_count = 0
         self.set_room(self.center, self.center)
         self.size = size
         self.room_limit = room_limit
@@ -23,7 +23,7 @@ class Map:
     def set_room(self, y, x):
         if self.grid[y][x] != 1:
             self.grid[y][x] = 1
-            self.rooms += 1
+            self.room_count += 1
             rooms.update({(y, x): create_room(y, x)})
 
     def generate_rooms(self):
@@ -33,9 +33,9 @@ class Map:
             Walker(self, 2, self.center+1, self.center),
             Walker(self, 3, self.center, self.center-1),
         ]
-        while self.rooms < self.room_limit:
+        while self.room_count < self.room_limit:
             for walker in walkers:
-                if self.rooms == self.room_limit:
+                if self.room_count == self.room_limit:
                     break
                 walker.act()
 
