@@ -1,5 +1,5 @@
 import random
-from room import Room
+from DungeonAPI.room import Room
 
 class Map:
     def __init__(self, size, room_limit, rooms):
@@ -68,6 +68,3 @@ class Walker:
         elif self.mode == 3 and self.x > 0:
             self.x -= 1
             map.set_room(self.y, self.x)
-
-# map = Map(25, 100)
-# map.generate_rooms()
