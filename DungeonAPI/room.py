@@ -19,7 +19,7 @@ class Room:
             f"\t\tname: {self.name},\n"
             f"\t\tdescription: {self.description},\n"
             f"\t\tworld_loc: {self.world_loc},\n"
-            f"\t\titems: {self.self.items},\n"
+            f"\t\titems: {self.items},\n"
             f"\t}}\n"
         )
 
