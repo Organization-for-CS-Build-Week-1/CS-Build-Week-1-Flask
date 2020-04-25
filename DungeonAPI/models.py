@@ -37,16 +37,14 @@ class Users(DB.Model):
     id            = DB.Column(DB.Integer, primary_key=True)
     user_name     = DB.Column(DB.Text, nullable=False)
     password_hash = DB.Column(DB.LargeBinary, nullable=False)
-    auth_key      = DB.Column(DB.Text, nullable=False)
     admin_q       = DB.Column(DB.Boolean, nullable=False)
     x             = DB.Column(DB.Integer, nullable=True)
     y             = DB.Column(DB.Integer, nullable=True)
     items         = DB.relationship('Items', backref="player", lazy=True)
 
-    def __init__(self, user_name, password_hash, auth_key, admin_q, x, y, items=None):
+    def __init__(self, user_name, password_hash, admin_q, x, y, items=None):
         self.user_name     = user_name
         self.password_hash = password_hash
-        self.auth_key      = auth_key
         self.admin_q       = admin_q
         self.x             = x
         self.y             = y
@@ -56,7 +54,6 @@ class Users(DB.Model):
         return {
             'id': self.id,
             'user_name': self.user_name,
-            'auth_key': self.auth_key,
             'admin_q': self.admin_q,
             'x': self.x,
             'y': self.y,
