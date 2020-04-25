@@ -20,7 +20,7 @@ class Map:
         id          = int(f"{str(y)}{str(x)}")
         name        = f"Room #{id}"
         description = f"The description for {name}."
-        return Room(name, description, id, x, y)
+        return Room(None, name, description, (y, x), id)
 
     def set_room(self, y, x):
         if self.grid[y][x] != 1:
