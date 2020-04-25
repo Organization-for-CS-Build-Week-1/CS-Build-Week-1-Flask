@@ -82,6 +82,7 @@ def create_app():
     @app.route('/api/check/')
     def check():
         # Check if server is running and load world.
+        world.create_world() # TODO: Remove when done testing. 
         if not world.loaded:
             try:
                 world.load_from_db(DB)
