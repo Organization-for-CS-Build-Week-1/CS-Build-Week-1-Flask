@@ -2,7 +2,7 @@ import random
 from DungeonAPI.room import Room
 
 class Map:
-    def __init__(self, size, room_limit, rooms):
+    def __init__(self, size, room_limit):
         self.grid = []
         row = [0] * size
         for i in range(size):
@@ -10,11 +10,12 @@ class Map:
             self.grid.append(row)
         self.center = size//2
         self.room_count = 0
-        self.set_room(self.center, self.center)
         self.size = size
         self.room_limit = room_limit
+        self.rooms = dict()
+        self.set_room(self.center, self.center)
 
-    def create_room(y, x):
+    def create_room(self, y, x):
         id = int(f"{str(y)}{str(x)}")
         name = f"Room #{id}"
         description = f"The description for {name}."
@@ -24,7 +25,7 @@ class Map:
         if self.grid[y][x] != 1:
             self.grid[y][x] = 1
             self.room_count += 1
-            rooms.update({(y, x): create_room(y, x)})
+            self.rooms.update({(y, x): self.create_room(y, x)})
 
     def generate_rooms(self):
         walkers = [
@@ -37,7 +38,8 @@ class Map:
             for walker in walkers:
                 if self.room_count == self.room_limit:
                     break
-                walker.act()
+                walker.move(self)
+        return self.rooms
 
 class Walker:
     def __init__(self, map, mode, y=0, x=0):
@@ -49,9 +51,9 @@ class Walker:
                 # 0 => up 
                 # 1 => right 
                 # 2 => down 
-                # 3 => left 
+                # 3 => left
 
-    def act(self):
+    def move(self, map):
         map_size = map.size-1
         action = random.randint(0,3)
         if action == 0:
