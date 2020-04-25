@@ -10,8 +10,10 @@ from decouple import config
 from DungeonAPI.room import Room
 from DungeonAPI.player import Player
 from DungeonAPI.world import World
+from DungeonAPI.blueprints import items_blueprint, users_blueprint, rooms_blueprint
 
-from DungeonAPI.models import DB
+from DungeonAPI.models import DB, Users, Items, Worlds
+
 
 def create_app():
     # Look up decouple for config variables
@@ -21,7 +23,6 @@ def create_app():
 
     app = Flask(__name__)
 
-
     # Add config for database
     app.config['SQLALCHEMY_DATABASE_URI'] = config('DATABASE_URL')
 
@@ -29,16 +30,39 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     DB.init_app(app)
-    
+
+    with app.app_context():
+        # Creates tiny world with one player and item in our DB
+
+        DB.drop_all()
+        DB.create_all()
+
+        new_i = Items(0, "hammer", 35, 2)
+
+        DB.session.add(Worlds(world.password_salt))
+        quth = world.add_player("6k6", "fdfhgg", "fdfhgg")["key"]
+        player = world.get_player_by_auth(quth)
+        new_u = Users(player.username, player.password_hash,
+                      player.auth_key, False, 1, 1, [new_i])
+
+        DB.session.add(new_u)
+
+        DB.session.commit()
+        world.load_from_db(DB)
 
     @app.after_request
     def after_request(response):
-      response.headers.add('Access-Control-Allow-Origin', '*')
-      response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-      response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
-      response.headers.add('Access-Control-Allow-Credentials', 'true')
-      return response
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers',
+                             'Content-Type,Authorization')
+        response.headers.add(
+            'Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+        return response
 
+    app.register_blueprint(items_blueprint.blueprint)
+    app.register_blueprint(users_blueprint.blueprint)
+    app.register_blueprint(rooms_blueprint.blueprint)
 
     def get_player_by_header(world, auth_header):
         if auth_header is None:
@@ -51,17 +75,21 @@ def create_app():
         player = world.get_player_by_auth(auth_key[1])
         return player
 
+    @app.route('/')
+    def home():
+        return jsonify({'Hello': 'World!'}), 200
+
     @app.route('/api/check/')
     def check():
         # Check if server is running and load world.
         if not world.loaded:
             try:
-              world.load_from_db(DB)
+                world.load_from_db(DB)
             except Exception:
-              pass
-              
+                pass
+
             world.loaded = True
-              
+
         return jsonify({}), 200
 
     @app.route('/api/registration/', methods=['GET'])
@@ -83,7 +111,6 @@ def create_app():
         else:
             return jsonify(response), 200
 
-
     @app.route('/api/login/', methods=['GET'])
     def login():
         values = request.args
@@ -94,10 +121,9 @@ def create_app():
         if user is None:
             response = {"error": "Username or password incorrect."}
             return jsonify(response), 500
-        
+
         response = {"key": user.auth_key}
         return jsonify(response), 200
-
 
     @app.route('/api/debug/', methods=['GET'])
     def debug():
@@ -111,7 +137,6 @@ def create_app():
 
         response = {'str': "Authority accepted."}
         return jsonify(response), 200
-
 
     @app.route('/api/debug/save/', methods=['GET'])
     def save():
@@ -128,7 +153,6 @@ def create_app():
         response = {'str': "Successfully saved world."}
         return jsonify(response), 200
 
-
     @app.route('/api/debug/load/', methods=['GET'])
     def load():
         player = world.get_player_by_auth(request.headers.get("Authorization"))
@@ -143,7 +167,6 @@ def create_app():
 
         response = {'str': "Successfully loaded world."}
         return jsonify(response), 200
-
 
     @app.route('/api/debug/reset/', methods=['GET'])
     def reset():
@@ -160,7 +183,6 @@ def create_app():
         response = {'str': "Successfully reset world."}
         return jsonify(response), 200
 
-
     @app.route('/api/adv/init/', methods=['GET'])
     def init():
         player = world.get_player_by_auth(request.headers.get("Authorization"))
@@ -173,7 +195,6 @@ def create_app():
             'description': player.current_room.description,
         }
         return jsonify(response), 200
-
 
     @app.route('/api/adv/move/', methods=['GET'])
     def move():
@@ -202,13 +223,11 @@ def create_app():
             }
             return jsonify(response), 500
 
-
     @app.route('/api/adv/take/', methods=['GET'])
     def take_item():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
         return jsonify(response), 400
-
 
     @app.route('/api/adv/drop/', methods=['GET'])
     def drop_item():
@@ -216,13 +235,11 @@ def create_app():
         response = {'error': "Not implemented"}
         return jsonify(response), 400
 
-
     @app.route('/api/adv/inventory/', methods=['GET'])
     def inventory():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
         return jsonify(response), 400
-
 
     @app.route('/api/adv/buy/', methods=['GET'])
     def buy_item():
@@ -230,19 +247,15 @@ def create_app():
         response = {'error': "Not implemented"}
         return jsonify(response), 400
 
-
     @app.route('/api/adv/sell/', methods=['GET'])
     def sell_item():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
         return jsonify(response), 400
 
-
     @app.route('/api/adv/rooms/', methods=['GET'])
     def rooms():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
         return jsonify(response), 400
-
-
     return app
