@@ -7,11 +7,17 @@ class Worlds(DB.Model):
     __tablename__ = 'worlds'
 
     """World data"""
-    id = DB.Column(DB.Integer, primary_key=True)
+    id            = DB.Column(DB.Integer, primary_key=True)
     password_salt = DB.Column(DB.LargeBinary, nullable=False)
 
     def __init__(self, password_salt):
         self.password_salt = password_salt
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'password_salt': self.password_salt
+        }
 
     def __repr__(self):
         output = {
@@ -28,34 +34,44 @@ class Users(DB.Model):
     __tablename__ = 'users'
 
     """Player data"""
-    id = DB.Column(DB.Integer, primary_key=True)
-    user_name = DB.Column(DB.Text, nullable=False)
+    id            = DB.Column(DB.Integer, primary_key=True)
+    user_name     = DB.Column(DB.Text, nullable=False)
     password_hash = DB.Column(DB.LargeBinary, nullable=False)
-    auth_key = DB.Column(DB.Text, nullable=False)
-    admin_q = DB.Column(DB.Boolean, nullable=False)
-    x = DB.Column(DB.Integer, nullable=True)
-    y = DB.Column(DB.Integer, nullable=True)
-    # inventory_id = DB.Column(DB.Integer, nullable=False)
+    auth_key      = DB.Column(DB.Text, nullable=False)
+    admin_q       = DB.Column(DB.Boolean, nullable=False)
+    x             = DB.Column(DB.Integer, nullable=True)
+    y             = DB.Column(DB.Integer, nullable=True)
+    items         = DB.relationship('Items', backref="player", lazy=True)
 
-    # , inventory_id):
-    def __init__(self, user_name, password_hash, auth_key, admin_q, x, y):
-        self.user_name = user_name
+    def __init__(self, user_name, password_hash, auth_key, admin_q, x, y, items=None):
+        self.user_name     = user_name
         self.password_hash = password_hash
-        self.auth_key = auth_key
-        self.admin_q = admin_q
-        self.x = x
-        self.y = y
-        # self.inventory_id = inventory_id
+        self.auth_key      = auth_key
+        self.admin_q       = admin_q
+        self.x             = x
+        self.y             = y
+        self.items         = items if items is not None else []
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'user_name': self.user_name,
+            'auth_key': self.auth_key,
+            'admin_q': self.admin_q,
+            'x': self.x,
+            'y': self.y,
+            'items': [item.serialize() for item in self.items]
+        }
 
     def __repr__(self):
         output = {
             'id': self.id,
             'user_name': self.user_name,
-            'current_room_id': self.current_room_id,
-            'password_hash': self.password_hash,
             'auth_key': self.auth_key,
-            'admin_q': self.admin_q
-            # 'inventory_id':self.inventory_id
+            'admin_q': self.admin_q,
+            'x': self.x,
+            'y': self.y,
+            'items': self.items
         }
         return str(output)
 
@@ -67,34 +83,38 @@ class Rooms(DB.Model):
     __tablename__ = 'rooms'
 
     """Room data"""
-    id = DB.Column(DB.Integer, primary_key=True)
-    name = DB.Column(DB.Text, nullable=False)
+    id          = DB.Column(DB.Integer, primary_key=True)
+    name        = DB.Column(DB.Text, nullable=False)
     description = DB.Column(DB.String(256), nullable=True)
-    x = DB.Column(DB.Integer, nullable=True)
-    y = DB.Column(DB.Integer, nullable=True)
-    # inventory_id = DB.Column(DB.Integer, nullable=False)
+    x           = DB.Column(DB.Integer, nullable=True)
+    y           = DB.Column(DB.Integer, nullable=True)
+    items       = DB.relationship('Items', backref="room", lazy=True)
 
-    # , inventory_id):
-    def __init__(self, id, name, description, north_id, south_id, east_id, west_id, x, y):
-        self.id = id
-        self.name = name
+    def __init__(self, name, description, x, y, items=None):
+        self.name        = name
         self.description = description
-        self.x = x
-        self.y = y
-        # self.inventory_id = inventory_id
+        self.x           = x
+        self.y           = y
+        self.items       = items if items is not None else []
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'x': self.x,
+            'y': self.y,
+            'items': [item.serialize() for item in self.items]
+        }
 
     def __repr__(self):
         output = {
             'id': self.id,
             'name': self.name,
             'description': self.description,
-            'north': self.north_id,
-            'south': self.south_id,
-            'east': self.east_id,
-            'west': self.west_id,
             'x': self.x,
-            'y': self.y
-            # 'inventory_id':self.inventory_id
+            'y': self.y,
+            'items': self.items
         }
         return str(output)
 
@@ -106,18 +126,29 @@ class Items(DB.Model):
     __tablename__ = "items"
 
     """Item data"""
-    id = DB.Column(DB.Integer, primary_key=True)
-    name = DB.Column(DB.Text, nullable=True)
-    weight = DB.Column(DB.Integer, nullable=False)
-    score = DB.Column(DB.Integer, nullable=False)
-    # inventory_id = DB.Column(DB.Integer, nullable=False)
+    id        = DB.Column(DB.Integer, primary_key=True)
+    name      = DB.Column(DB.Text, nullable=True)
+    weight    = DB.Column(DB.Integer, nullable=False)
+    score     = DB.Column(DB.Integer, nullable=False)
+    player_id = DB.Column(DB.Integer, DB.ForeignKey('users.id'), nullable=True)
+    room_id   = DB.Column(DB.Integer, DB.ForeignKey('rooms.id'), nullable=True)
 
-    def __init__(self, id, name, weight, score):  # , inventory_id):
-        self.id = id
-        self.name = name
-        self.weight = weight
-        self.score = score
-        # self.inventory_id = inventory_id
+    def __init__(self, name, weight, score, player_id=None, room_id=None):
+        self.name      = name
+        self.weight    = weight
+        self.score     = score
+        self.player_id = player_id
+        self.room_id   = room_id
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'weight': self.weight,
+            'score': self.score,
+            'player_id': self.player_id,
+            'room_id': self.room_id
+        }
 
     def __repr__(self):
         output = {
@@ -125,7 +156,8 @@ class Items(DB.Model):
             'name': self.name,
             'weight': self.weight,
             'score': self.score,
-            # 'inventory_id':self.inventory_id,
+            'player_id': self.player_id,
+            'room_id': self.room_id
         }
         return str(output)
 
