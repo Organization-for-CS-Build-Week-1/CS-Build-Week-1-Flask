@@ -141,8 +141,10 @@ class World:
             self.rooms[room.world_loc] = room
 
         for u in Users.query.all():
-            world_loc = (r.x, r.y)
+            world_loc = (u.x, u.y)
             player = Player(self, u.user_name, world_loc, u.password_hash,
                             auth_key=u.auth_key, admin_q=u.admin_q == 1, items=u.items)
 
             self.players[u.auth_key] = player
+        
+        self.loaded = True
