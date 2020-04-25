@@ -9,16 +9,16 @@ class Map:
         for i in range(size):
             row = row.copy()
             self.grid.append(row)
-        self.center = size//2
+        self.center     = size//2
         self.room_count = 0
-        self.size = size
+        self.size       = size
         self.room_limit = room_limit
-        self.rooms = dict()
+        self.rooms      = dict()
         self.set_room(self.center, self.center)
 
     def create_room(self, y, x):
-        id = int(f"{str(y)}{str(x)}")
-        name = f"Room #{id}"
+        id          = int(f"{str(y)}{str(x)}")
+        name        = f"Room #{id}"
         description = f"The description for {name}."
         return Room(name, description, id, x, y)
 
@@ -55,8 +55,8 @@ class Map:
 
 class Walker:
     def __init__(self, map, mode, y=0, x=0):
-        self.y = y
-        self.x = x
+        self.y    = y
+        self.x    = x
         self.mode = mode % 4
         map.set_room(y, x)
         # modes map as follows:
@@ -67,7 +67,7 @@ class Walker:
 
     def move(self, map):
         map_size = map.size-1
-        action = random.randint(0,2)
+        action   = random.randint(0,2)
         if action == 0:
             self.mode = (self.mode + 1) % 4
         if self.mode == 0 and self.y > 0:
