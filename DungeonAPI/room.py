@@ -11,6 +11,21 @@ class Room:
         self.w_to = w_to
         self.x = x
         self.y = y
+
+    def __repr__(self):
+        return (
+            f"{{\n"
+            f"\tid: {self.id},\n"
+            f"\tname: {self.name},\n"
+            f"\tdescription: {self.description},\n"
+            f"\ty: {self.y},\n"
+            f"\tx: {self.x},\n"
+            f"\tn_to: {self.n_to},\n"
+            f"\ts_to: {self.s_to},\n"
+            f"\te_to: {self.e_to},\n"
+            f"\tw_to: {self.w_to},\n"
+            f"}}\n"
+        )
     def get_exits(self):
         exits = []
         if self.n_to is not None:
