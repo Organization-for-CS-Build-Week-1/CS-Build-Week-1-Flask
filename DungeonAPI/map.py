@@ -1,4 +1,5 @@
 import random
+import time
 from DungeonAPI.room import Room
 
 class Map:
@@ -32,7 +33,7 @@ class Map:
             Walker(self, 0, self.center-1, self.center),
             Walker(self, 1, self.center, self.center+1),
             Walker(self, 2, self.center+1, self.center),
-            Walker(self, 3, self.center, self.center-1),
+            Walker(self, 3, self.center, self.center-1),#
         ]
         while self.room_count < self.room_limit:
             for walker in walkers:
@@ -40,6 +41,17 @@ class Map:
                     break
                 walker.move(self)
         return self.rooms
+
+    def print_grid(self):
+        for row in self.grid:
+            row_str = ''
+            for item in row:
+                if item == 1:
+                    item_str = "\x1b[1;33m1"
+                else:
+                    item_str = "\x1b[1;34m0"
+                row_str += item_str
+            print(row_str)
 
 class Walker:
     def __init__(self, map, mode, y=0, x=0):
@@ -55,7 +67,7 @@ class Walker:
 
     def move(self, map):
         map_size = map.size-1
-        action = random.randint(0,3)
+        action = random.randint(0,2)
         if action == 0:
             self.mode = (self.mode + 1) % 4
         if self.mode == 0 and self.y > 0:
