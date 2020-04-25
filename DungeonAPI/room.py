@@ -15,16 +15,16 @@ class Room:
     def __repr__(self):
         return (
             f"{{\n"
-            f"\tid: {self.id},\n"
-            f"\tname: {self.name},\n"
-            f"\tdescription: {self.description},\n"
-            f"\ty: {self.y},\n"
-            f"\tx: {self.x},\n"
-            f"\tn_to: {self.n_to},\n"
-            f"\ts_to: {self.s_to},\n"
-            f"\te_to: {self.e_to},\n"
-            f"\tw_to: {self.w_to},\n"
-            f"}}\n"
+            f"\t\tid: {self.id},\n"
+            f"\t\tname: {self.name},\n"
+            f"\t\tdescription: {self.description},\n"
+            f"\t\ty: {self.y},\n"
+            f"\t\tx: {self.x},\n"
+            f"\t\tn_to: {self.n_to},\n"
+            f"\t\ts_to: {self.s_to},\n"
+            f"\t\te_to: {self.e_to},\n"
+            f"\t\tw_to: {self.w_to},\n"
+            f"\t}}\n"
         )
     def get_exits(self):
         exits = []
