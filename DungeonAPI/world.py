@@ -31,11 +31,18 @@ class World:
             return {'error': "Password must be longer than 5 characters"}
         elif self.get_player_by_username(username) is not None:
             return {'error': "Username already exists"}
+
         password_hash = bcrypt.hashpw(password1.encode(), self.password_salt)
         world_loc = (4, 5)
 
-        player = Player(self, username, world_loc, password_hash,
+        # Add user to DB first to get player id
+        new_user = Users(username, password_hash, False, 4, 5)
+        DB.session.add(new_user)
+        DB.session.commit()
+
+        player = Player(self, new_user.id, username, world_loc, password_hash,
                         admin_q=len(self.players) == 0)
+
         self.players[player.auth_key] = player
         return {'key': player.auth_key}
 
@@ -56,12 +63,10 @@ class World:
         if user.password_hash == password_hash:
             return user
         return None
-    
+
     def create_world(self):
         map = Map(25, 150)
         self.rooms = map.generate_rooms()
-        # map.print_grid() 
-        # print(self.rooms)
 
     def save_to_db(self, DB):
         """
@@ -92,7 +97,7 @@ class World:
 
         for p in self.players.values():
             new_user = Users(p.username, p.password_hash,
-                             p.auth_key, p.admin_q, p.world_loc[0], p.world_loc[1])
+                             p.admin_q, p.world_loc[0], p.world_loc[1])
             DB.session.add(new_user)
 
             for i in p.items:
@@ -119,9 +124,9 @@ class World:
 
         for u in Users.query.all():
             world_loc = (u.x, u.y)
-            player = Player(self, u.user_name, world_loc, u.password_hash,
-                            auth_key=u.auth_key, admin_q=u.admin_q == 1, items=u.items)
+            player = Player(self, u.id, u.user_name, world_loc, u.password_hash,
+                            admin_q=u.admin_q == 1, items=u.items)
 
-            self.players[u.auth_key] = player
-        
+            self.players[player.auth_key] = player
+
         self.loaded = True
