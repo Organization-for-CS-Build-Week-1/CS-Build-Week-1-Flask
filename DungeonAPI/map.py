@@ -81,18 +81,19 @@ class Map:
     def generate_rooms(self):
         for i in range(self.size):
             for j in range(self.size):
-                neighbors = self.get_neighbors(i, j)
-                if len(neighbors) == 1:
-                    room = self.create_room(j, i, 'dead-end')
-                elif len(neighbors) > 2:
-                    room = self.create_room(j, i, 'room')
-                else:
-                    corner = self.get_corner_type(neighbors)
-                    if corner and self.has_inside_diag_neighbor(corner, i, j):
+                if self.grid[i][j] == 1:
+                    neighbors = self.get_neighbors(i, j)
+                    if len(neighbors) == 1:
+                        room = self.create_room(j, i, 'dead-end')
+                    elif len(neighbors) > 2:
                         room = self.create_room(j, i, 'room')
                     else:
-                        room = self.create_room(j, i, 'tunnel')
-                self.rooms.update({(j,i): room})
+                        corner = self.get_corner_type(neighbors)
+                        if corner and self.has_inside_diag_neighbor(corner, i, j):
+                            room = self.create_room(j, i, 'room')
+                        else:
+                            room = self.create_room(j, i, 'tunnel')
+                    self.rooms.update({(j,i): room})
         return self.rooms
 
     def print_grid(self):
