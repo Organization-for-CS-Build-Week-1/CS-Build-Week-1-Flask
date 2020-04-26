@@ -93,6 +93,7 @@ class Map:
                     else:
                         room = self.create_room(j, i, 'tunnel')
                 self.rooms.update({(j,i): room})
+        return self.rooms
 
     def print_grid(self):
         for i, row in enumerate(self.grid):
