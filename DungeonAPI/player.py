@@ -3,9 +3,10 @@ import uuid
 
 
 class Player:
-    def __init__(self, world, name, world_loc, password_hash, highscore=0, auth_key=None, admin_q=False, items=None):
+    def __init__(self, world, id, name, world_loc, password_hash, highscore=0, admin_q=False, items=None):
+        self.id            = id
         self.username      = name
-        self.__auth_key    = auth_key if auth_key is not None else Player.__generate_auth_key()
+        self.__auth_key    = Player.__generate_auth_key()
         self.password_hash = password_hash
         self.uuid          = uuid.uuid4
         self.admin_q       = admin_q

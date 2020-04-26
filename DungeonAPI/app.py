@@ -43,7 +43,7 @@ def create_app():
         quth = world.add_player("6k6", "fdfhgg", "fdfhgg")["key"]
         player = world.get_player_by_auth(quth)
         new_u = Users(player.username, player.password_hash,
-                      player.auth_key, False, 1, 1, [new_i])
+                      False, 1, 1, [new_i])
 
         DB.session.add(new_u)
 
@@ -79,9 +79,11 @@ def create_app():
     def home():
         return jsonify({'Hello': 'World!'}), 200
 
-    @app.route('/api/check/')
+    @app.route('/api/check')
     def check():
         # Check if server is running and load world.
+        world.create_world()  # TODO: Remove when done testing.
+        world.save_to_db(DB)
         if not world.loaded:
             try:
                 world.load_from_db(DB)
@@ -92,9 +94,9 @@ def create_app():
 
         return jsonify({}), 200
 
-    @app.route('/api/registration/', methods=['GET'])
+    @app.route('/api/registration', methods=['POST'])
     def register():
-        values = request.args
+        values = request.get_json()
         required = ['username', 'password1', 'password2']
 
         if not all(k in values for k in required):
@@ -111,9 +113,9 @@ def create_app():
         else:
             return jsonify(response), 200
 
-    @app.route('/api/login/', methods=['GET'])
+    @app.route('/api/login', methods=['POST'])
     def login():
-        values = request.args
+        values = request.get_json()
 
         user = world.authenticate_user(values.get('username'),
                                        values.get('password'))
@@ -125,7 +127,7 @@ def create_app():
         response = {"key": user.auth_key}
         return jsonify(response), 200
 
-    @app.route('/api/debug/', methods=['GET'])
+    @app.route('/api/debug', methods=['POST'])
     def debug():
         player = world.get_player_by_auth(request.headers.get("Authorization"))
         if player is None:
@@ -138,7 +140,7 @@ def create_app():
         response = {'str': "Authority accepted."}
         return jsonify(response), 200
 
-    @app.route('/api/debug/save/', methods=['GET'])
+    @app.route('/api/debug/save', methods=['GET'])
     def save():
         player = world.get_player_by_auth(request.headers.get("Authorization"))
         if player is None:
@@ -153,7 +155,7 @@ def create_app():
         response = {'str': "Successfully saved world."}
         return jsonify(response), 200
 
-    @app.route('/api/debug/load/', methods=['GET'])
+    @app.route('/api/debug/load', methods=['GET'])
     def load():
         player = world.get_player_by_auth(request.headers.get("Authorization"))
         if player is None:
@@ -168,7 +170,7 @@ def create_app():
         response = {'str': "Successfully loaded world."}
         return jsonify(response), 200
 
-    @app.route('/api/debug/reset/', methods=['GET'])
+    @app.route('/api/debug/reset', methods=['GET'])
     def reset():
         player = world.get_player_by_auth(request.headers.get("Authorization"))
         if player is None:
@@ -183,7 +185,7 @@ def create_app():
         response = {'str': "Successfully reset world."}
         return jsonify(response), 200
 
-    @app.route('/api/adv/init/', methods=['GET'])
+    @app.route('/api/adv/init', methods=['GET'])
     def init():
         player = world.get_player_by_auth(request.headers.get("Authorization"))
         if player is None:
@@ -196,14 +198,14 @@ def create_app():
         }
         return jsonify(response), 200
 
-    @app.route('/api/adv/move/', methods=['GET'])
+    @app.route('/api/adv/move', methods=['GET'])
     def move():
         player = world.get_player_by_auth(request.headers.get("Authorization"))
         if player is None:
             response = {'error': "Malformed auth header"}
             return jsonify(response), 500
 
-        values = request.args
+        values = request.get_json()
         required = ['direction']
 
         if not all(k in values for k in required):
@@ -223,37 +225,37 @@ def create_app():
             }
             return jsonify(response), 500
 
-    @app.route('/api/adv/take/', methods=['GET'])
+    @app.route('/api/adv/take', methods=['GET'])
     def take_item():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
         return jsonify(response), 400
 
-    @app.route('/api/adv/drop/', methods=['GET'])
+    @app.route('/api/adv/drop', methods=['GET'])
     def drop_item():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
         return jsonify(response), 400
 
-    @app.route('/api/adv/inventory/', methods=['GET'])
+    @app.route('/api/adv/inventory', methods=['GET'])
     def inventory():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
         return jsonify(response), 400
 
-    @app.route('/api/adv/buy/', methods=['GET'])
+    @app.route('/api/adv/buy', methods=['GET'])
     def buy_item():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
         return jsonify(response), 400
 
-    @app.route('/api/adv/sell/', methods=['GET'])
+    @app.route('/api/adv/sell', methods=['GET'])
     def sell_item():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
         return jsonify(response), 400
 
-    @app.route('/api/adv/rooms/', methods=['GET'])
+    @app.route('/api/adv/rooms', methods=['GET'])
     def rooms():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}

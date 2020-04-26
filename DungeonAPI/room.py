@@ -11,3 +11,15 @@ class Room:
         self.description = description
         self.world_loc   = world_loc
         self.items       = items if items is not None else {}
+
+    def __repr__(self):
+        return (
+            f"{{\n"
+            f"\t\tid: {self.id},\n"
+            f"\t\tname: {self.name},\n"
+            f"\t\tdescription: {self.description},\n"
+            f"\t\tworld_loc: {self.world_loc},\n"
+            f"\t\titems: {self.items},\n"
+            f"\t}}\n"
+        )
+
