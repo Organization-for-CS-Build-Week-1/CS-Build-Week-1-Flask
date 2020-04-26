@@ -17,11 +17,17 @@ class Map:
         self.rooms      = dict()
         self.set_grid(self.center, self.center)
 
-    def create_room(self, y, x):
+    def create_room(self, x, y, room_type):
         id          = int(f"{str(y)}{str(x)}")
+        world_loc   = (x,y)
         name        = f"Room #{id}"
         description = f"The description for {name}."
-        return Room(None, name, description, (x, y), id)
+        if room_type == "dead-end":
+            return DeadEnd(None, world_loc, id)
+        elif room_type == "tunnel":
+            return Tunnel(None, world_loc, id)
+        else:
+            return Room(None, name, description, world_loc, id)
 
     def set_grid(self, y, x):
         if self.grid[y][x] != 1:
@@ -54,6 +60,14 @@ class Map:
             neighbors.append('w')
         return neighbors
     
+    def generate_rooms(self):
+        for i in range(self.size):
+            for j in range(self.size):
+                neighbors = self.get_neighbors(i, j)
+                if len(neighbors) == 1:
+                    self.rooms.update({(x,y): DeadEnd(None, (x,y))})
+
+
     def print_grid(self):
         for row in self.grid:
             row_str = ''
