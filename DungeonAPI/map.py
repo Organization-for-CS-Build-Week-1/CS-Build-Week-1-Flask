@@ -18,7 +18,7 @@ class Map:
         self.set_grid(self.center, self.center)
 
     def create_room(self, x, y, room_type):
-        id          = int(f"{str(y)}{str(x)}")
+        id          = int(f"{str(x)}{str(y)}")
         world_loc   = (x,y)
         name        = f"Room #{id}"
         description = f"The description for {name}."
