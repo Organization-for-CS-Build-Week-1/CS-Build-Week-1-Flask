@@ -52,9 +52,9 @@ class Map:
         neighbors = []
         if i > 0 and self.grid[i-1][j] == 1:
             neighbors.append('n')
-        if i < self.size-2 and self.grid[i+1][j] == 1:
+        if i < self.size-1 and self.grid[i+1][j] == 1:
             neighbors.append('s')
-        if j < self.size-2 and self.grid[i][j+1] == 1:
+        if j < self.size-1 and self.grid[i][j+1] == 1:
             neighbors.append('e')
         if j > 0 and self.grid[i][j-1] == 1:
             neighbors.append('w')
@@ -65,15 +65,25 @@ class Map:
             for j in range(self.size):
                 neighbors = self.get_neighbors(i, j)
                 if len(neighbors) == 1:
-                    self.rooms.update({(x,y): DeadEnd(None, (x,y))})
-
+                    room = self.create_room(j, i, 'dead-end')
+                elif len(neighbors) > 2:
+                    room = self.create_room(j, i, 'room')
+                else:
+                    room = self.create_room(j, i, 'tunnel')
+                self.rooms.update({(j,i): room})
 
     def print_grid(self):
-        for row in self.grid:
+        for i, row in enumerate(self.grid):
             row_str = ''
-            for item in row:
+            for j, item in enumerate(row):
                 if item == 1:
-                    item_str = "\x1b[1;33m1"
+                    room = self.rooms.get((j,i))
+                    if isinstance(room, Tunnel):
+                        item_str = "\x1b[1;32m1"
+                    elif isinstance(room, DeadEnd):
+                        item_str = "\x1b[1;31m1"
+                    else:
+                        item_str = "\x1b[1;33m1"
                 else:
                     item_str = "\x1b[1;34m0"
                 row_str += item_str
