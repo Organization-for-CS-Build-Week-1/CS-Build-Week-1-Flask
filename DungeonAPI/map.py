@@ -33,7 +33,6 @@ class Map:
         if self.grid[y][x] != 1:
             self.grid[y][x] = 1
             self.room_count += 1
-            # self.rooms.update({(x, y): self.create_room(y, x)})
 
     def generate_grid(self):
         walkers = [
@@ -60,6 +59,25 @@ class Map:
             neighbors.append('w')
         return neighbors
     
+    def get_corner_type(self, neighbors):
+        if len(neighbors) != 2:
+            return None
+        neighbor_str = ''.join(neighbors)
+        if neighbor_str == 'ns' or neighbor_str == 'ew':
+            return None
+        else:
+            return neighbor_str
+        
+    def has_inside_diag_neighbor(self, corner_type, i, j):
+        bound = self.size-1
+        switcher = {
+            "ne": i > 0     and j < bound and self.grid[i-1][j+1],
+            "nw": i > 0     and j > 0     and self.grid[i-1][j-1],
+            "se": i < bound and j < bound and self.grid[i+1][j+1],
+            "sw": i < bound and j > 0     and self.grid[i+1][j-1],
+        }
+        return switcher.get(corner_type) == 1
+
     def generate_rooms(self):
         for i in range(self.size):
             for j in range(self.size):
@@ -69,7 +87,11 @@ class Map:
                 elif len(neighbors) > 2:
                     room = self.create_room(j, i, 'room')
                 else:
-                    room = self.create_room(j, i, 'tunnel')
+                    corner = self.get_corner_type(neighbors)
+                    if corner and self.has_inside_diag_neighbor(corner, i, j):
+                        room = self.create_room(j, i, 'room')
+                    else:
+                        room = self.create_room(j, i, 'tunnel')
                 self.rooms.update({(j,i): room})
 
     def print_grid(self):
@@ -81,11 +103,11 @@ class Map:
                     if isinstance(room, Tunnel):
                         item_str = "\x1b[1;32m1"
                     elif isinstance(room, DeadEnd):
-                        item_str = "\x1b[1;31m1"
+                        item_str = "\x1b[1;35m1"
                     else:
                         item_str = "\x1b[1;33m1"
                 else:
-                    item_str = "\x1b[1;34m0"
+                    item_str = "\x1b[1;30m0"
                 row_str += item_str
             print(row_str)
 
