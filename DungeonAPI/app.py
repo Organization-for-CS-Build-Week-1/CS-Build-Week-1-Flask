@@ -11,7 +11,7 @@ from decouple import config
 from .room import Room
 from .player import Player
 from .world import World
-from .blueprints import items_blueprint, users_blueprint, rooms_blueprint
+from .blueprints import items_blueprint, users_blueprint, rooms_blueprint, worlds_blueprint
 
 from .models import DB, Users, Items, Worlds
 
@@ -81,7 +81,7 @@ def create_app():
 
         new_i = Items(0, "hammer", 35, 2)
 
-        DB.session.add(Worlds(world.password_salt))
+        DB.session.add(Worlds(world.password_salt, world.map_seed))
         quth = world.add_player("6k6", "fdfhgg", "fdfhgg")["key"]
         player_u = world.get_player_by_auth(quth)
         new_u = Users(player_u.username, player_u.password_hash,
@@ -106,6 +106,7 @@ def create_app():
     app.register_blueprint(items_blueprint.blueprint)
     app.register_blueprint(users_blueprint.blueprint)
     app.register_blueprint(rooms_blueprint.blueprint)
+    app.register_blueprint(worlds_blueprint.blueprint)
 
     def get_player_by_header(world, auth_header):
         if auth_header is None:

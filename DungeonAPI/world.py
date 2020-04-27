@@ -12,7 +12,7 @@ from .models import *
 
 class World:
 
-    def __init__(self):
+    def __init__(self, map_seed = None):
         # rooms   { key: Room.world_loc,  value: Room }
         # players { key: Player.auth_key, value: Player }
 
@@ -20,6 +20,7 @@ class World:
         self.rooms         = {}
         self.players       = {}
         self.loaded        = False
+        self.map_seed      = map_seed
         self.create_world()
 
     def add_player(self, username, password1, password2, socketid=None):
@@ -77,7 +78,7 @@ class World:
 
     def create_world(self):
         map = Map(25, 150)
-        map.generate_grid()
+        self.map_seed = map.generate_grid(map_seed = self.map_seed)
         self.rooms = map.generate_rooms(self)
 
     def save_to_db(self, DB):
@@ -89,7 +90,7 @@ class World:
         DB.drop_all()
         DB.create_all()
 
-        new_world = Worlds(self.password_salt)
+        new_world = Worlds(self.password_salt, self.map_seed)
         DB.session.add(new_world)
 
         DB.session.commit()
@@ -130,6 +131,7 @@ class World:
         or `load_player_from_db()` to load players into the game.
         """
         self.password_salt = Worlds.query.all()[0].password_salt
+        self.map_seed = Worlds.query.all()[0].map_seed
 
         self.rooms = {}
         self.players = {}
