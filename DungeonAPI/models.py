@@ -42,12 +42,13 @@ class Users(DB.Model):
     y             = DB.Column(DB.Integer, nullable=True)
     items         = DB.relationship('Items', backref="player", lazy=True)
 
-    def __init__(self, username, password_hash, admin_q, x, y, items=None):
+    def __init__(self, username, password_hash, admin_q, x, y, items=None, highscore=0):
         self.username      = username
         self.password_hash = password_hash
         self.admin_q       = admin_q
         self.x             = x
         self.y             = y
+        self.highscore     = highscore
         self.items         = items if items is not None else []
 
     def serialize(self):
@@ -57,6 +58,7 @@ class Users(DB.Model):
             'admin_q': self.admin_q,
             'x': self.x,
             'y': self.y,
+            'highscore': self.highscore,
             'items': [item.serialize() for item in self.items]
         }
 
@@ -68,6 +70,7 @@ class Users(DB.Model):
             'admin_q': self.admin_q,
             'x': self.x,
             'y': self.y,
+            'highscore': self.highscore,
             'items': self.items
         }
         return str(output)

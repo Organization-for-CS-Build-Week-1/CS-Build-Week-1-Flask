@@ -109,7 +109,7 @@ class World:
 
         for p in self.players.values():
             new_user = Users(p.username, p.password_hash,
-                             p.admin_q, p.world_loc[0], p.world_loc[1])
+                             p.admin_q, p.world_loc[0], p.world_loc[1], highscore=p.highscore)
             DB.session.add(new_user)
 
             for i in p.items:
