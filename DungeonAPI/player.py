@@ -3,10 +3,10 @@ import uuid
 
 
 class Player:
-    def __init__(self, world, id, name, world_loc, password_hash, highscore=0, admin_q=False, items=None):
+    def __init__(self, world, id, name, world_loc, password_hash, auth_key=None, highscore=0, admin_q=False, items=None):
         self.id            = id
         self.username      = name
-        self.__auth_key    = Player.__generate_auth_key()
+        self.__auth_key    = auth_key if auth_key else Player.__generate_auth_key()
         self.password_hash = password_hash
         self.uuid          = uuid.uuid4
         self.admin_q       = admin_q
@@ -16,7 +16,7 @@ class Player:
         self.max_weight    = 100
         self.high_score    = highscore
         # Inventory { key: Item.id, value: Item }
-        self.items         = items if items is not None else {}
+        self.items         = items if items else {}
 
     @property
     def weight(self):
@@ -30,7 +30,7 @@ class Player:
         return self.__auth_key
 
     @property
-    def room(self):
+    def current_room(self):
         """
         `self.room`
 
