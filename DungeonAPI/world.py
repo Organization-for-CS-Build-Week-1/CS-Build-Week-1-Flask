@@ -67,7 +67,7 @@ class World:
 
     def create_world(self):
         map = Map(25, 150)
-        map_seed = map.generate_grid()
+        self.map_seed = map.generate_grid()
         self.rooms = map.generate_rooms()
 
     def save_to_db(self, DB):
@@ -79,7 +79,7 @@ class World:
         DB.drop_all()
         DB.create_all()
 
-        new_world = Worlds(self.password_salt)
+        new_world = Worlds(self.password_salt, self.map_seed)
         DB.session.add(new_world)
 
         DB.session.commit()
