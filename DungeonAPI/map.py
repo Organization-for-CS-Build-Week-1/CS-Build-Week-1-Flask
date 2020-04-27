@@ -34,12 +34,15 @@ class Map:
             self.grid[y][x] = 1
             self.room_count += 1
 
-    def generate_grid(self):
+    def generate_grid(self, map_seed = None):
         walkers = [
             Walker(self, 1, 2, self.center, self.center + 1),
             Walker(self, 2, 3, self.center + 1, self.center)
         ]
-        grid_seed = random.randint(0, 10**6)
+        if map_seed is None:
+            grid_seed = random.randint(0, 10**6)
+        else:
+            grid_seed = map_seed
         random.seed(grid_seed)
         while self.room_count < self.room_limit:
             for walker in walkers:
