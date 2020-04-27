@@ -9,20 +9,24 @@ class Worlds(DB.Model):
     """World data"""
     id            = DB.Column(DB.Integer, primary_key=True)
     password_salt = DB.Column(DB.LargeBinary, nullable=False)
+    map_seed      = DB.Column(DB.Integer)
 
-    def __init__(self, password_salt):
+    def __init__(self, password_salt, map_seed):
         self.password_salt = password_salt
+        self.map_seed      = map_seed
 
     def serialize(self):
         return {
             'id': self.id,
-            'password_salt': self.password_salt
+            'password_salt': self.password_salt,
+            'map_seed': self.map_seed
         }
 
     def __repr__(self):
         output = {
             'id': self.id,
-            'password_salt': self.password_salt
+            'password_salt': self.password_salt,
+            'map_seed': self.map_seed
         }
         return str(output)
 
