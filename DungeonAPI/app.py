@@ -81,6 +81,12 @@ def create_app():
         print(f"\n{request.sid}\n")
         emit("connected", "hello")
 
+    @socketio.on("test")
+    def connection(data):
+        print(f"\n{request.sid}")
+        print(data)
+        emit("we got you", data)
+
     @app.route('/')
     def home():
         return jsonify({'Hello': 'World!'}), 200
