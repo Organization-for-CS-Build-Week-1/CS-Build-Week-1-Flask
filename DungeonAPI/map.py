@@ -39,11 +39,14 @@ class Map:
             Walker(self, 1, 2, self.center, self.center + 1),
             Walker(self, 2, 3, self.center + 1, self.center)
         ]
+        grid_seed = random.randint(0, 10**6)
+        random.seed(grid_seed)
         while self.room_count < self.room_limit:
             for walker in walkers:
                 if self.room_count == self.room_limit:
                     break
                 walker.move(self)
+        return grid_seed
 
     def get_neighbors(self, i, j):
         neighbors = []
