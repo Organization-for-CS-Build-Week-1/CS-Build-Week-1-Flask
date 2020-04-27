@@ -40,7 +40,7 @@ def create_app():
 
         new_i = Items(0, "hammer", 35, 2)
 
-        DB.session.add(Worlds(world.password_salt))
+        DB.session.add(Worlds(world.password_salt, world.map_seed))
         quth = world.add_player("6k6", "fdfhgg", "fdfhgg")["key"]
         player = world.get_player_by_auth(quth)
         new_u = Users(player.username, player.password_hash,
