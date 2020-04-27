@@ -7,12 +7,12 @@ from flask import Flask, jsonify, request, render_template
 from flask_socketio import SocketIO, emit
 from decouple import config
 
-from DungeonAPI.room import Room
-from DungeonAPI.player import Player
-from DungeonAPI.world import World
-from DungeonAPI.blueprints import items_blueprint, users_blueprint, rooms_blueprint
+from .room import Room
+from .player import Player
+from .world import World
+from .blueprints import items_blueprint, users_blueprint, rooms_blueprint
 
-from DungeonAPI.models import DB, Users, Items, Worlds
+from .models import DB, Users, Items, Worlds
 
 
 def create_app():

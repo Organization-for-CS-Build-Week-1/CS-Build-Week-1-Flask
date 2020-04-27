@@ -1,6 +1,6 @@
 import random
 import time
-from DungeonAPI.room import Room, Tunnel, DeadEnd
+from .room import Room, Tunnel, DeadEnd
 
 
 class Map:
@@ -93,7 +93,7 @@ class Map:
                             room = self.create_room(j, i, 'room')
                         else:
                             room = self.create_room(j, i, 'tunnel')
-                    self.rooms.update({(j,i): room})
+                    self.rooms[(j,i)] = room
         return self.rooms
 
     def print_grid(self):
