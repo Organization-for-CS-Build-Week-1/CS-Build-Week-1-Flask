@@ -1,5 +1,6 @@
 import hashlib
 import json
+from functools import wraps
 from time import time
 from uuid import uuid4
 
@@ -16,8 +17,49 @@ from DungeonAPI.models import DB, Users, Items, Worlds
 
 
 def create_app():
-    # Look up decouple for config variables
-    #pusher = Pusher(app_id=config('PUSHER_APP_ID'), key=config('PUSHER_KEY'), secret=config('PUSHER_SECRET'), cluster=config('PUSHER_CLUSTER'))
+
+    def print_socket_info(sid, data=None):
+        print(f"\n{sid}")
+        if data:
+            print(data)
+        print()
+
+    def player_in_world(f):
+        """
+        Checks if the player's socket id exists in the world.
+        -  exists → Continue request
+        - !exists → emit 'noPlayer' error
+        Any following function MUST include player as the first parameter.
+        """
+        @wraps(f)
+        def handler(*args, **kwargs):
+            player = world.get_player_by_auth(request.sid)
+            if player is None:
+                response = {'error': 'No player found in world'}
+                return emit('noPlayer', response)
+            else:
+                return f(player, *args, **kwargs)
+        return handler
+
+    def player_is_admin(f):
+        """
+        Checks if the existing player has `admin_q` set to True.
+        -  True → Continue request
+        - False → emit 'noAdmin' error
+        This decorator MUST come after `@player_in_world` to access
+        the player.
+
+        Any following function MUST include player as the first parameter.
+        """
+        @wraps(f)
+        def handler(player, *args, **kwargs):
+            if not player.admin_q:
+                response = {'error': "User not authorized"}
+                return emit('noAdmin', response)
+            else:
+                return f(player, *args, **kwargs)
+        return handler
+
 
     world = World()
 
@@ -78,19 +120,18 @@ def create_app():
 
     @socketio.on("connect")
     def connection():
-        print(f"\n{request.sid} is here!\n")
+        print_socket_info(request.sid, "Joined the server.")
         emit("connected", "hello")
 
     @socketio.on("disconnect")
     def connection():
-        print(f"\n{request.sid} is leaving\n")
+        print_socket_info(request.sid, "Left the server.")
         emit("connected", "hello")
 
     @socketio.on("test")
     def connection(data):
-        print(f"\n{request.sid}")
-        print(data)
-        emit("we got you", data)
+        print_socket_info(request.sid, data)
+        emit("test", data)
 
     @app.route('/')
     def home():
@@ -109,105 +150,84 @@ def create_app():
 
             world.loaded = True
 
-        return jsonify({}), 200
+        return jsonify({'message': 'World is up and running'}), 200
 
-    @app.route('/api/registration', methods=['POST'])
-    def register():
-        values = request.get_json()
+    @socketio.on('registration')
+    def register(data):
+        print_socket_info(request.sid, data)
         required = ['username', 'password1', 'password2']
 
-        if not all(k in values for k in required):
-            response = {'message': "Missing Values"}
-            return jsonify(response), 400
+        if not all(k in data for k in required):
+            response = {'error': "Missing Values",
+                        'required': 'username, password1, password2'}
+            return emit('registerError', response)
 
-        username = values.get('username')
-        password1 = values.get('password1')
-        password2 = values.get('password2')
+        username = data.get('username')
+        password1 = data.get('password1')
+        password2 = data.get('password2')
 
         response = world.add_player(username, password1, password2)
         if 'error' in response:
-            return jsonify(response), 500
+            return emit('registerError', response)
         else:
-            return jsonify(response), 200
+            return emit('register', response)
 
-    @app.route('/api/login', methods=['POST'])
-    def login():
-        values = request.get_json()
+    @socketio.on('login')
+    def login(data):
+        print_socket_info(request.sid, data)
 
-        user = world.authenticate_user(values.get('username'),
-                                       values.get('password'))
+        user = world.authenticate_user(data.get('username'),
+                                       data.get('password'))
 
         if user is None:
             response = {"error": "Username or password incorrect."}
-            return jsonify(response), 500
+            return emit('loginError', response)
 
         response = {"key": user.auth_key}
-        return jsonify(response), 200
+        return emit('login', response)
 
-    @app.route('/api/debug', methods=['POST'])
-    def debug():
-        player = world.get_player_by_auth(request.headers.get("Authorization"))
-        if player is None:
-            response = {'error': "Malformed auth header"}
-            return jsonify(response), 500
-        if not player.admin_q:
-            response = {'error': "User not authorized"}
-            return jsonify(response), 500
+    @socketio.on('debug')
+    @player_in_world
+    @player_is_admin
+    def debug(player):
+        print_socket_info(request.sid)
+        response = {'message': "Authority accepted."}
+        return emit('debug', response)
 
-        response = {'str': "Authority accepted."}
-        return jsonify(response), 200
-
-    @app.route('/api/debug/save', methods=['GET'])
-    def save():
-        player = world.get_player_by_auth(request.headers.get("Authorization"))
-        if player is None:
-            response = {'error': "Malformed auth header"}
-            return jsonify(response), 500
-        if not player.admin_q:
-            response = {'error': "User not authorized"}
-            return jsonify(response), 500
-
+    @socketio.on('debug/save')
+    @player_in_world
+    @player_is_admin
+    def save(player):
+        print_socket_info(request.sid)
         world.save_to_db(DB)
 
-        response = {'str': "Successfully saved world."}
-        return jsonify(response), 200
+        response = {'message': "Successfully saved world."}
+        return emit('debug/save', reponse)
 
-    @app.route('/api/debug/load', methods=['GET'])
-    def load():
-        player = world.get_player_by_auth(request.headers.get("Authorization"))
-        if player is None:
-            response = {'error': "Malformed auth header"}
-            return jsonify(response), 500
-        if not player.admin_q:
-            response = {'error': "User not authorized"}
-            return jsonify(response), 500
-
+    @socketio.on('debug/load')
+    @player_in_world
+    @player_is_admin
+    def load(player):
+        print_socket_info(request.sid)
         world.load_from_db(DB)
 
-        response = {'str': "Successfully loaded world."}
-        return jsonify(response), 200
+        response = {'message': "Successfully loaded world."}
+        return emit('debug/load', response)
 
-    @app.route('/api/debug/reset', methods=['GET'])
-    def reset():
-        player = world.get_player_by_auth(request.headers.get("Authorization"))
-        if player is None:
-            response = {'error': "Malformed auth header"}
-            return jsonify(response), 500
-        if not player.admin_q:
-            response = {'error': "User not authorized"}
-            return jsonify(response), 500
-
+    @socketio.on('debug/reset')
+    @player_in_world
+    @player_is_admin
+    def reset(player):
+        print_socket_info(request.sid)
         world.create_world()
 
-        response = {'str': "Successfully reset world."}
-        return jsonify(response), 200
+        response = {'message': "Successfully reset world."}
+        return emit('debug/reset', response)
 
-    @app.route('/api/adv/init', methods=['GET'])
-    def init():
-        player = world.get_player_by_auth(request.headers.get("Authorization"))
-        if player is None:
-            response = {'error': "Malformed auth header"}
-            return jsonify(response), 500
+    @socketio.on('init')
+    @player_in_world
+    def init(data):
+        print_socket_info(request.sid)
 
         response = {
             'title': player.current_room.name,
@@ -215,12 +235,9 @@ def create_app():
         }
         return jsonify(response), 200
 
-    @app.route('/api/adv/move', methods=['GET'])
-    def move():
-        player = world.get_player_by_auth(request.headers.get("Authorization"))
-        if player is None:
-            response = {'error': "Malformed auth header"}
-            return jsonify(response), 500
+    @socketio.on('move')
+    @player_in_world
+    def move(player, data):
 
         values = request.get_json()
         required = ['direction']
@@ -242,42 +259,42 @@ def create_app():
             }
             return jsonify(response), 500
 
-    @app.route('/api/adv/take', methods=['GET'])
+    @socketio.on('take')
     def take_item():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
         return jsonify(response), 400
 
-    @app.route('/api/adv/drop', methods=['GET'])
+    @socketio.on('drop')
     def drop_item():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
         return jsonify(response), 400
 
-    @app.route('/api/adv/inventory', methods=['GET'])
+    @socketio.on('inventory')
     def inventory():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
         return jsonify(response), 400
 
-    @app.route('/api/adv/buy', methods=['GET'])
+    @socketio.on('buy')
     def buy_item():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
         return jsonify(response), 400
 
-    @app.route('/api/adv/sell', methods=['GET'])
+    @socketio.on('sell')
     def sell_item():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
         return jsonify(response), 400
 
-    @app.route('/api/adv/rooms', methods=['GET'])
+    @socketio.on('rooms')
     def rooms():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
         return jsonify(response), 400
-    
+
     return app, socketio
 
 
