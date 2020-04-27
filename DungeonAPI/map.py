@@ -1,6 +1,6 @@
 import random
 import time
-from room import Room
+from DungeonAPI.room import Room
 
 
 class Map:
