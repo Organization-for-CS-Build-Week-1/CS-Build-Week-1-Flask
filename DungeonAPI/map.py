@@ -1,6 +1,8 @@
 import random
 import time
 from .room import Room, Tunnel, DeadEnd
+from .constants.adjectives import adjectives
+from .constants.places import places
 
 
 class Map:
@@ -10,12 +12,24 @@ class Map:
         for i in range(size):
             row = row.copy()
             self.grid.append(row)
+        self.locations = [''] * (len(adjectives) * len(places))
+        i = 0
+        for adjective in adjectives:
+            for place in places:
+                self.locations[i] = f"{adjective}/{place}"
+                i += 1
         self.center     = size // 2
         self.room_count = 0
         self.size       = size
         self.room_limit = room_limit
         self.rooms      = dict()
         self.set_grid(self.center, self.center)
+
+    def get_loc_name(self):
+        idx = random.randint(0, len(self.locations)-1)
+        loc_name = self.locations[idx]
+        del self.locations[idx]
+        return loc_name
 
     def create_room(self, x, y, room_type, world=None):
         id          = int(f"{str(x)}{str(y)}")
