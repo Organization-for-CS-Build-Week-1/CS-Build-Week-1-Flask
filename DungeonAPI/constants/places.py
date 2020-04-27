@@ -21,7 +21,7 @@ places = [
     "chicken coop",
     "doghouse",
     "rain barrel",
-    "hornet's nest",
+    "bee hive",
     "skunk den",
     "raccoon trap"
 ]
