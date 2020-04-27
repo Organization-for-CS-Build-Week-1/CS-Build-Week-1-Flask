@@ -67,7 +67,7 @@ class World:
     def create_world(self):
         map = Map(25, 150)
         map.generate_grid()
-        self.rooms = map.generate_rooms()
+        self.rooms = map.generate_rooms(self)
         
 
     def save_to_db(self, DB):
