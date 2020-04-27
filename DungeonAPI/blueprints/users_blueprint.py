@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify
-from models import Users
+from DungeonAPI.models import Users
 from .middleware import admin_only
 
 blueprint = Blueprint('users', __name__, url_prefix="/api/models/users")
