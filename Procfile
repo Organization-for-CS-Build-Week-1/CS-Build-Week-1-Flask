@@ -1,1 +1,1 @@
-web: gunicorn --workers=1 DungeonAPI:APP
+web: python DungeonAPI/app.py

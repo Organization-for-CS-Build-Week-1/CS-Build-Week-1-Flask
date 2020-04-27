@@ -2,12 +2,12 @@ import random
 import math
 import bcrypt
 
-from DungeonAPI.room import Room
-from DungeonAPI.player import Player
-from DungeonAPI.map import Map
-from DungeonAPI.item import Item
+from room import Room
+from player import Player
+from map import Map
+from item import Item
 
-from DungeonAPI.models import *
+from models import *
 
 
 class World:
