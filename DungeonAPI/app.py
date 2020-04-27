@@ -7,12 +7,12 @@ from flask import Flask, jsonify, request, render_template
 from flask_socketio import SocketIO, emit
 from decouple import config
 
-from DungeonAPI.room import Room
-from DungeonAPI.player import Player
-from DungeonAPI.world import World
-from DungeonAPI.blueprints import items_blueprint, users_blueprint, rooms_blueprint
+from .room import Room
+from .player import Player
+from .world import World
+from .blueprints import items_blueprint, users_blueprint, rooms_blueprint
 
-from DungeonAPI.models import DB, Users, Items, Worlds
+from .models import DB, Users, Items, Worlds
 
 
 def create_app():
@@ -42,14 +42,15 @@ def create_app():
 
         DB.session.add(Worlds(world.password_salt))
         quth = world.add_player("6k6", "fdfhgg", "fdfhgg")["key"]
-        player = world.get_player_by_auth(quth)
-        new_u = Users(player.username, player.password_hash,
-                      False, 1, 1, [new_i])
+        player_u = world.get_player_by_auth(quth)
+        new_u = Users(player_u.username, player_u.password_hash,
+                      False, player_u.world_loc[0], player_u.world_loc[1],
+                      [new_i])
 
         DB.session.add(new_u)
 
         DB.session.commit()
-        world.load_from_db(DB)
+        #world.load_from_db(DB)
 
     @app.after_request
     def after_request(response):
@@ -215,7 +216,7 @@ def create_app():
         }
         return jsonify(response), 200
 
-    @app.route('/api/adv/move', methods=['GET'])
+    @app.route('/api/adv/move', methods=['POST'])
     def move():
         player = world.get_player_by_auth(request.headers.get("Authorization"))
         if player is None:
