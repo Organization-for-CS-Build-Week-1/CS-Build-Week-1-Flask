@@ -30,15 +30,15 @@ class Player:
         return self.__auth_key
 
     @property
-    def room(self):
+    def current_room(self):
         """
-        `self.room`
+        `self.current_room`
 
         Returns the Room object the player is in.
 
         If there is no valid Room found, returns None.
         """
-        return world.rooms.get(self.world_loc, None)
+        return self.world.rooms.get(self.world_loc, None)
 
     def __generate_auth_key():
         digits = ['0', '1', '2', '3', '4', '5', '6',
