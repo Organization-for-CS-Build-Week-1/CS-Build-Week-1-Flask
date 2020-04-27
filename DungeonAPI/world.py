@@ -20,6 +20,7 @@ class World:
         self.rooms         = {}
         self.players       = {}
         self.loaded        = False
+        self.map_seed      = None
         # self.create_world()
 
     def add_player(self, username, password1, password2):
@@ -66,7 +67,7 @@ class World:
 
     def create_world(self):
         map = Map(25, 150)
-        grid_seed = map.generate_grid()
+        map_seed = map.generate_grid()
         self.rooms = map.generate_rooms()
 
     def save_to_db(self, DB):
