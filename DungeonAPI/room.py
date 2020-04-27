@@ -4,12 +4,13 @@
 
 class Room:
 
-    def __init__(self, world, name, description, world_loc, id=0, items=None):
+    def __init__(self, world, name, description, world_loc, loc_name=None, id=0, items=None):
         self.id          = id
         self.world       = world
         self.name        = name
         self.description = description
         self.world_loc   = world_loc
+        self.loc_name    = loc_name
         self.items       = items if items is not None else {}
 
     def __repr__(self):
