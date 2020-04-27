@@ -8,12 +8,12 @@ from flask import Flask, jsonify, request, render_template
 from flask_socketio import SocketIO, emit
 from decouple import config
 
-from DungeonAPI.room import Room
-from DungeonAPI.player import Player
-from DungeonAPI.world import World
-from DungeonAPI.blueprints import items_blueprint, users_blueprint, rooms_blueprint
+from .room import Room
+from .player import Player
+from .world import World
+from .blueprints import items_blueprint, users_blueprint, rooms_blueprint
 
-from DungeonAPI.models import DB, Users, Items, Worlds
+from .models import DB, Users, Items, Worlds
 
 
 def create_app():
@@ -60,7 +60,6 @@ def create_app():
                 return f(player, *args, **kwargs)
         return handler
 
-
     world = World()
 
     app = Flask(__name__)
@@ -74,28 +73,25 @@ def create_app():
     socketio = SocketIO(app, cors_allowed_origins="*")
     DB.init_app(app)
 
-    # to make sure we don't grab variables we shouldn't have like
-    # player, new_u, quth
-    def init_world():
-        with app.app_context():
-            # Creates tiny world with one player and item in our DB
+    with app.app_context():
+        # Creates tiny world with one player and item in our DB
 
-            DB.drop_all()
-            DB.create_all()
+        DB.drop_all()
+        DB.create_all()
 
-            new_i = Items(0, "hammer", 35, 2)
+        new_i = Items(0, "hammer", 35, 2)
 
-            DB.session.add(Worlds(world.password_salt))
-            quth = world.add_player("6k6", "fdfhgg", "fdfhgg")["key"]
-            player = world.get_player_by_auth(quth)
-            new_u = Users(player.username, player.password_hash,
-                        False, 1, 1, [new_i])
+        DB.session.add(Worlds(world.password_salt))
+        quth = world.add_player("6k6", "fdfhgg", "fdfhgg")["key"]
+        player_u = world.get_player_by_auth(quth)
+        new_u = Users(player_u.username, player_u.password_hash,
+                      False, player_u.world_loc[0], player_u.world_loc[1],
+                      [new_i])
 
-            DB.session.add(new_u)
+        DB.session.add(new_u)
 
-            DB.session.commit()
-            world.load_from_db(DB)
-    init_world()
+        DB.session.commit()
+        # world.load_from_db(DB)
 
     @app.after_request
     def after_request(response):
@@ -170,7 +166,8 @@ def create_app():
         password1 = data.get('password1')
         password2 = data.get('password2')
 
-        response = world.add_player(username, password1, password2, request.sid)
+        response = world.add_player(
+            username, password1, password2, request.sid)
         if 'error' in response:
             return emit('registerError', response)
         else:

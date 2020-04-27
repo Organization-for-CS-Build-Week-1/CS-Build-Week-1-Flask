@@ -1,6 +1,6 @@
 import random
 import time
-from DungeonAPI.room import Room, Tunnel, DeadEnd
+from .room import Room, Tunnel, DeadEnd
 
 
 class Map:
@@ -17,17 +17,17 @@ class Map:
         self.rooms      = dict()
         self.set_grid(self.center, self.center)
 
-    def create_room(self, x, y, room_type):
+    def create_room(self, x, y, room_type, world=None):
         id          = int(f"{str(x)}{str(y)}")
         world_loc   = (x,y)
         name        = f"Room #{id}"
         description = f"The description for {name}."
         if room_type == "dead-end":
-            return DeadEnd(None, world_loc, id)
+            return DeadEnd(world, world_loc, id)
         elif room_type == "tunnel":
-            return Tunnel(None, world_loc, id)
+            return Tunnel(world, world_loc, id)
         else:
-            return Room(None, name, description, world_loc, id)
+            return Room(world, name, description, world_loc, id)
 
     def set_grid(self, y, x):
         if self.grid[y][x] != 1:
@@ -78,22 +78,22 @@ class Map:
         }
         return switcher.get(corner_type) == 1
 
-    def generate_rooms(self):
+    def generate_rooms(self, world=None):
         for i in range(self.size):
             for j in range(self.size):
                 if self.grid[i][j] == 1:
                     neighbors = self.get_neighbors(i, j)
                     if len(neighbors) == 1:
-                        room = self.create_room(j, i, 'dead-end')
+                        room = self.create_room(j, i, 'dead-end', world)
                     elif len(neighbors) > 2:
-                        room = self.create_room(j, i, 'room')
+                        room = self.create_room(j, i, 'room', world)
                     else:
                         corner = self.get_corner_type(neighbors)
                         if corner and self.has_inside_diag_neighbor(corner, i, j):
-                            room = self.create_room(j, i, 'room')
+                            room = self.create_room(j, i, 'room', world)
                         else:
-                            room = self.create_room(j, i, 'tunnel')
-                    self.rooms.update({(j,i): room})
+                            room = self.create_room(j, i, 'tunnel', world)
+                    self.rooms[(j,i)] = room
         return self.rooms
 
     def print_grid(self):

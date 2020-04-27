@@ -2,12 +2,12 @@ import random
 import math
 import bcrypt
 
-from DungeonAPI.room import Room
-from DungeonAPI.player import Player
-from DungeonAPI.map import Map
-from DungeonAPI.item import Item
+from .room import Room
+from .player import Player
+from .map import Map
+from .item import Item
 
-from DungeonAPI.models import *
+from .models import *
 
 
 class World:
@@ -20,7 +20,7 @@ class World:
         self.rooms         = {}
         self.players       = {}
         self.loaded        = False
-        # self.create_world()
+        self.create_world()
 
     def add_player(self, username, password1, password2, socketid=None):
         if password1 != password2:
@@ -33,14 +33,10 @@ class World:
             return {'error': "Username already exists"}
 
         password_hash = bcrypt.hashpw(password1.encode(), self.password_salt)
-        
-        # Get an existing room from the rooms we have
-        # If we just can't find a room, None it for now
-        starting_room = next(iter(self.rooms.values()), None)
-        world_loc = starting_room.world_loc if starting_room else (4, 5)
+        world_loc = list(self.rooms.keys())[0]
 
         # Add user to DB first to get player id
-        new_user = Users(username, password_hash, False, 4, 5)
+        new_user = Users(username, password_hash, False, world_loc[0], world_loc[1])
         DB.session.add(new_user)
         DB.session.commit()
 
@@ -71,7 +67,7 @@ class World:
     def create_world(self):
         map = Map(25, 150)
         map.generate_grid()
-        self.rooms = map.generate_rooms()
+        self.rooms = map.generate_rooms(self)
         
 
     def save_to_db(self, DB):

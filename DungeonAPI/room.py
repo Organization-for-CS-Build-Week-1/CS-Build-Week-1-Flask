@@ -23,6 +23,18 @@ class Room:
             f"\t}}\n"
         )
 
+    def get_room_in_direction(self, direction):
+        if direction == 'n':
+            return self.world.rooms.get((self.world_loc[0], self.world_loc[1]+1), None)
+        elif direction == 's':
+            return self.world.rooms.get((self.world_loc[0], self.world_loc[1]-1), None)
+        elif direction == 'e':
+            return self.world.rooms.get((self.world_loc[0]+1, self.world_loc[1]), None)
+        elif direction == 'w':
+            return self.world.rooms.get((self.world_loc[0]-1, self.world_loc[1]), None)
+        else:
+            return None
+
 class Tunnel(Room):
 
     def __init__(self, world, world_loc, id=0, items=None):
