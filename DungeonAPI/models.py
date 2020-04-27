@@ -18,7 +18,7 @@ class Worlds(DB.Model):
     def serialize(self):
         return {
             'id': self.id,
-            'password_salt': self.password_salt,
+            'password_salt': str(self.password_salt),
             'map_seed': self.map_seed
         }
 
