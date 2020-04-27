@@ -10,7 +10,7 @@ from decouple import config
 from DungeonAPI.room import Room
 from DungeonAPI.player import Player
 from DungeonAPI.world import World
-from DungeonAPI.blueprints import items_blueprint, users_blueprint, rooms_blueprint
+from DungeonAPI.blueprints import items_blueprint, users_blueprint, rooms_blueprint, world_blueprint
 
 from DungeonAPI.models import DB, Users, Items, Worlds
 
@@ -64,6 +64,7 @@ def create_app():
     app.register_blueprint(items_blueprint.blueprint)
     app.register_blueprint(users_blueprint.blueprint)
     app.register_blueprint(rooms_blueprint.blueprint)
+    app.register_blueprint(world_blueprint.blueprint)
 
     def get_player_by_header(world, auth_header):
         if auth_header is None:
