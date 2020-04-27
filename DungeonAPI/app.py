@@ -78,7 +78,12 @@ def create_app():
 
     @socketio.on("connect")
     def connection():
-        print(f"\n{request.sid}\n")
+        print(f"\n{request.sid} is here!\n")
+        emit("connected", "hello")
+
+    @socketio.on("disconnect")
+    def connection():
+        print(f"\n{request.sid} is leaving\n")
         emit("connected", "hello")
 
     @socketio.on("test")
