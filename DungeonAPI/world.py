@@ -36,7 +36,8 @@ class World:
         world_loc = list(self.rooms.keys())[0]
 
         # Add user to DB first to get player id
-        new_user = Users(username, password_hash, False, world_loc[0], world_loc[1])
+        new_user = Users(username, password_hash, False,
+                         world_loc[0], world_loc[1])
         DB.session.add(new_user)
         DB.session.commit()
 
@@ -55,20 +56,29 @@ class World:
                 return self.players[auth_key]
         return None
 
-    def authenticate_user(self, username, password):
-        user = self.get_player_by_username(username)
+    def load_player_from_db(self, username, password, socketid):
+        user = Users.query.filter_by(username=username).first()
         if user is None:
-            return None
+            return {'error': 'Invalid username'}
+
         password_hash = bcrypt.hashpw(password.encode(), self.password_salt)
-        if user.password_hash == password_hash:
-            return user
-        return None
+        if user.password_hash != password_hash:
+            return {'error': 'Invalid password'}
+
+        world_loc = (user.x, user.y)
+        player = Player(self, user.id, user.username, world_loc,
+                        user.password_hash, auth_key=socketid, items=user.items)
+        self.players[player.auth_key] = player
+        return {'message': 'logged in', 'key': player.auth_key}
+
+    def get_serialized_rooms(self):
+        return {f"{k[0]}-{k[1]}": v.serialize()
+                for k, v in self.rooms.items()}
 
     def create_world(self):
         map = Map(25, 150)
         map.generate_grid()
         self.rooms = map.generate_rooms(self)
-        
 
     def save_to_db(self, DB):
         """
@@ -112,6 +122,13 @@ class World:
         DB.session.commit()
 
     def load_from_db(self, DB):
+        """
+        Loads all Rooms and any associated items from the database
+        into the game.
+
+        This function does NOT load any players. Use `add_player()`
+        or `load_player_from_db()` to load players into the game.
+        """
         self.password_salt = Worlds.query.all()[0].password_salt
 
         self.rooms = {}
@@ -123,12 +140,5 @@ class World:
                         world_loc, id=r.id, items=r.items)
 
             self.rooms[room.world_loc] = room
-
-        for u in Users.query.all():
-            world_loc = (u.x, u.y)
-            player = Player(self, u.id, u.user_name, world_loc, u.password_hash,
-                            admin_q=u.admin_q == 1, items=u.items)
-
-            self.players[player.auth_key] = player
 
         self.loaded = True

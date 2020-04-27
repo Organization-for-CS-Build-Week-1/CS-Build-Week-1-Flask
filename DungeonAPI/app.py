@@ -91,7 +91,7 @@ def create_app():
         DB.session.add(new_u)
 
         DB.session.commit()
-        # world.load_from_db(DB)
+        world.load_from_db(DB)
 
     @app.after_request
     def after_request(response):
@@ -119,17 +119,16 @@ def create_app():
         return player
 
     @socketio.on("connect")
-    def connection():
+    def connect():
         print_socket_info(request.sid, "Joined the server.")
         emit("connected", "hello")
 
     @socketio.on("disconnect")
-    def connection():
+    def disconnect():
         print_socket_info(request.sid, "Left the server.")
-        emit("connected", "hello")
 
     @socketio.on("test")
-    def connection(data):
+    def test(data):
         print_socket_info(request.sid, data)
         emit("test", data)
 
@@ -177,15 +176,14 @@ def create_app():
     def login(data):
         print_socket_info(request.sid, data)
 
-        user = world.authenticate_user(data.get('username'),
-                                       data.get('password'))
+        response = world.load_player_from_db(data.get('username'),
+                                             data.get('password'),
+                                             request.sid)
 
-        if user is None:
-            response = {"error": "Username or password incorrect."}
+        if 'error' in response:
             return emit('loginError', response)
-
-        response = {"key": user.auth_key}
-        return emit('login', response)
+        else:
+            return emit('login', response)
 
     @socketio.on('debug')
     @player_in_world
@@ -230,11 +228,16 @@ def create_app():
     def init(player):
         print_socket_info(request.sid)
 
+        # tuples are not allowed as keys in JSON
+        rooms = player.world.get_serialized_rooms()
+
         response = {
-            'title': player.current_room.name,
-            'description': player.current_room.description,
+            'rooms': rooms,
+            # 'players': player.world.players,
+            'you': player.serialize()
         }
         return emit('init', response)
+
 
     @socketio.on('move')
     @player_in_world

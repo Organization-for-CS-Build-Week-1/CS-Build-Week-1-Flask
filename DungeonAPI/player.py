@@ -14,7 +14,7 @@ class Player:
         self.world         = world
         self.world_loc     = world_loc  # tuple of coordinates in world (x, y)
         self.max_weight    = 100
-        self.high_score    = highscore
+        self.highscore    = highscore
         # Inventory { key: Item.id, value: Item }
         self.items         = items if items else {}
 
@@ -56,3 +56,13 @@ class Player:
         else:
             print("You cannot move in that direction.")
             return False
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'world_loc': list(self.world_loc),
+            'weight': self.weight,
+            'highscore': self.highscore,
+            'items': self.items
+        }
