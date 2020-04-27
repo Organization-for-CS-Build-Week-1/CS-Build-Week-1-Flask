@@ -1,1 +1,1 @@
-web: python DungeonAPI/app.py
+web: gunicorn -w 1 DungeonAPI:APP
