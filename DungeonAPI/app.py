@@ -4,7 +4,7 @@ from time import time
 from uuid import uuid4
 
 from flask import Flask, jsonify, request, render_template
-#from pusher import Pusher
+from flask_socketio import SocketIO, emit
 from decouple import config
 
 from DungeonAPI.room import Room
@@ -29,6 +29,7 @@ def create_app():
     # Stop tracking modifications on sqlalchemy config
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+    socketio = SocketIO(app, cors_allowed_origins="*")
     DB.init_app(app)
 
     with app.app_context():
@@ -74,6 +75,22 @@ def create_app():
 
         player = world.get_player_by_auth(auth_key[1])
         return player
+
+    @socketio.on("connect")
+    def connection():
+        print(f"\n{request.sid} is here!\n")
+        emit("connected", "hello")
+
+    @socketio.on("disconnect")
+    def connection():
+        print(f"\n{request.sid} is leaving\n")
+        emit("connected", "hello")
+
+    @socketio.on("test")
+    def connection(data):
+        print(f"\n{request.sid}")
+        print(data)
+        emit("we got you", data)
 
     @app.route('/')
     def home():
@@ -260,4 +277,11 @@ def create_app():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
         return jsonify(response), 400
-    return app
+    
+    return app, socketio
+
+
+if __name__ == '__main__':
+    APP, socketio = create_app()
+    print("app")
+    socketio.run(APP)
