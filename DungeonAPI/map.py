@@ -16,7 +16,7 @@ class Map:
         i = 0
         for adjective in adjectives:
             for place in places:
-                self.locations[i] = f"{adjective}/{place}"
+                self.locations[i] = {adjective: adjective, place: place}
                 i += 1
         self.center     = size // 2
         self.room_count = 0
@@ -26,6 +26,8 @@ class Map:
         self.set_grid(self.center, self.center)
 
     def get_loc_name(self):
+        if not self.locations:
+            return {adjective: 'invisible', place: 'nowhere'}
         idx = random.randint(0, len(self.locations)-1)
         loc_name = self.locations[idx]
         del self.locations[idx]
