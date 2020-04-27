@@ -22,7 +22,7 @@ class World:
         self.loaded        = False
         # self.create_world()
 
-    def add_player(self, username, password1, password2):
+    def add_player(self, username, password1, password2, socketid=None):
         if password1 != password2:
             return {'error': "Passwords do not match"}
         elif len(username) <= 2:
@@ -33,7 +33,11 @@ class World:
             return {'error': "Username already exists"}
 
         password_hash = bcrypt.hashpw(password1.encode(), self.password_salt)
-        world_loc = (4, 5)
+        
+        # Get an existing room from the rooms we have
+        # If we just can't find a room, None it for now
+        starting_room = next(iter(self.rooms.values()), None)
+        world_loc = starting_room.world_loc if starting_room else (4, 5)
 
         # Add user to DB first to get player id
         new_user = Users(username, password_hash, False, 4, 5)
@@ -41,10 +45,10 @@ class World:
         DB.session.commit()
 
         player = Player(self, new_user.id, username, world_loc, password_hash,
-                        admin_q=len(self.players) == 0)
+                        auth_key=socketid, admin_q=len(self.players) == 0)
 
         self.players[player.auth_key] = player
-        return {'key': player.auth_key}
+        return {'message': 'Player registered', 'key': player.auth_key}
 
     def get_player_by_auth(self, auth_key):
         return self.players.get(auth_key, None)

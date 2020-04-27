@@ -74,24 +74,28 @@ def create_app():
     socketio = SocketIO(app, cors_allowed_origins="*")
     DB.init_app(app)
 
-    with app.app_context():
-        # Creates tiny world with one player and item in our DB
+    # to make sure we don't grab variables we shouldn't have like
+    # player, new_u, quth
+    def init_world():
+        with app.app_context():
+            # Creates tiny world with one player and item in our DB
 
-        DB.drop_all()
-        DB.create_all()
+            DB.drop_all()
+            DB.create_all()
 
-        new_i = Items(0, "hammer", 35, 2)
+            new_i = Items(0, "hammer", 35, 2)
 
-        DB.session.add(Worlds(world.password_salt))
-        quth = world.add_player("6k6", "fdfhgg", "fdfhgg")["key"]
-        player = world.get_player_by_auth(quth)
-        new_u = Users(player.username, player.password_hash,
-                      False, 1, 1, [new_i])
+            DB.session.add(Worlds(world.password_salt))
+            quth = world.add_player("6k6", "fdfhgg", "fdfhgg")["key"]
+            player = world.get_player_by_auth(quth)
+            new_u = Users(player.username, player.password_hash,
+                        False, 1, 1, [new_i])
 
-        DB.session.add(new_u)
+            DB.session.add(new_u)
 
-        DB.session.commit()
-        world.load_from_db(DB)
+            DB.session.commit()
+            world.load_from_db(DB)
+    init_world()
 
     @app.after_request
     def after_request(response):
@@ -166,7 +170,7 @@ def create_app():
         password1 = data.get('password1')
         password2 = data.get('password2')
 
-        response = world.add_player(username, password1, password2)
+        response = world.add_player(username, password1, password2, request.sid)
         if 'error' in response:
             return emit('registerError', response)
         else:
@@ -226,14 +230,14 @@ def create_app():
 
     @socketio.on('init')
     @player_in_world
-    def init(data):
+    def init(player):
         print_socket_info(request.sid)
 
         response = {
             'title': player.current_room.name,
             'description': player.current_room.description,
         }
-        return jsonify(response), 200
+        return emit('init', response)
 
     @socketio.on('move')
     @player_in_world

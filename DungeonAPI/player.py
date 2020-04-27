@@ -38,7 +38,7 @@ class Player:
 
         If there is no valid Room found, returns None.
         """
-        return world.rooms.get(self.world_loc, None)
+        return self.world.rooms.get(self.world_loc, None)
 
     def __generate_auth_key():
         digits = ['0', '1', '2', '3', '4', '5', '6',
