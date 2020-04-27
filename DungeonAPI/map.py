@@ -34,18 +34,22 @@ class Map:
             self.grid[y][x] = 1
             self.room_count += 1
 
-    def generate_grid(self):
+    def generate_grid(self, map_seed = None):
         walkers = [
-            Walker(self, 0, self.center - 1, self.center),
-            Walker(self, 1, self.center, self.center + 1),
-            Walker(self, 2, self.center + 1, self.center),
-            Walker(self, 3, self.center, self.center - 1),
+            Walker(self, 1, 2, self.center, self.center + 1),
+            Walker(self, 2, 3, self.center + 1, self.center)
         ]
+        if map_seed is None:
+            grid_seed = random.randint(0, 10**6)
+        else:
+            grid_seed = map_seed
+        random.seed(grid_seed)
         while self.room_count < self.room_limit:
             for walker in walkers:
                 if self.room_count == self.room_limit:
                     break
                 walker.move(self)
+        return grid_seed
 
     def get_neighbors(self, i, j):
         neighbors = []
@@ -115,10 +119,11 @@ class Map:
 
 
 class Walker:
-    def __init__(self, map, mode, y=0, x=0):
+    def __init__(self, map, mode, rand_factor, y=0, x=0):
         self.y    = y
         self.x    = x
         self.mode = mode % 4
+        self.rand_factor = rand_factor
         map.set_grid(y, x)
         # modes map as follows:
         # 0 => up
@@ -128,7 +133,7 @@ class Walker:
 
     def move(self, map):
         map_size = map.size - 1
-        action   = random.randint(0, 2)
+        action   = random.randint(0, self.rand_factor)
         if action == 0:
             self.mode = (self.mode + 1) % 4
         if self.mode == 0 and self.y > 0:
