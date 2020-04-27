@@ -23,3 +23,16 @@ class Room:
             f"\t}}\n"
         )
 
+class Tunnel(Room):
+
+    def __init__(self, world, world_loc, id=0, items=None):
+        name        = f"Tunnel segment {world_loc[0]}-{world_loc[1]}"
+        description = "An underground tunnel. Where does it lead? Continue to find out!"
+        super().__init__(world, name, description, world_loc, id, items)
+
+class DeadEnd(Room):
+
+    def __init__(self, world, world_loc, id=0, items=None):
+        name = f"Dead end {world_loc[0]}-{world_loc[1]}"
+        description = "A dead end. Some thoughtless ant built a tunnel to nowhere! Better turn around."
+        super().__init__(world, name, description, world_loc, id, items)
