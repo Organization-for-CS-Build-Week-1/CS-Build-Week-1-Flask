@@ -16,6 +16,7 @@ bcrypt = "*"
 psycopg2 = "*"
 python-dotenv = "*"
 flask-socketio = "*"
+eventlet = "*"
 
 [requires]
 python_version = "3.7"

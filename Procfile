@@ -1,1 +1,1 @@
-web: gunicorn -w 1 DungeonAPI:APP
+web: gunicorn --worker-class eventlet -w 1 DungeonAPI:APP
