@@ -12,7 +12,7 @@ from .models import *
 
 class World:
 
-    def __init__(self, map_seed = None):
+    def __init__(self, map_seed=None):
         # rooms   { key: Room.world_loc,  value: Room }
         # players { key: Player.auth_key, value: Player }
 
@@ -78,7 +78,7 @@ class World:
 
     def create_world(self):
         map = Map(25, 150)
-        self.map_seed = map.generate_grid(map_seed = self.map_seed)
+        self.map_seed = map.generate_grid(map_seed=self.map_seed)
         self.rooms = map.generate_rooms(self)
 
     def save_to_db(self, DB):

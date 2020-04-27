@@ -229,40 +229,34 @@ def create_app():
     def init(player):
         print_socket_info(request.sid)
 
-        # tuples are not allowed as keys in JSON
-        rooms = player.world.get_serialized_rooms()
-
         response = {
-            'rooms': rooms,
+            'rooms': player.world.get_serialized_rooms(),
             # 'players': player.world.players,
             'you': player.serialize()
         }
         return emit('init', response)
 
-
     @socketio.on('move')
     @player_in_world
     def move(player, data):
+        print_socket_info(request.sid, data)
 
-        values = request.get_json()
-        required = ['direction']
+        direction = data.get('direction')
+        if direction is None:
+            return emit("moveError", {
+                 "error": "You must move a direction: 'n', 's', 'e', 'w'"})
 
-        if not all(k in values for k in required):
-            response = {'message': "Missing Values"}
-            return jsonify(response), 400
-
-        direction = values.get('direction')
         if player.travel(direction):
             response = {
-                'title': player.current_room.name,
-                'description': player.current_room.description,
+                'room': player.current_room.serialize(),
+                'you': player.serialize(),
             }
-            return jsonify(response), 200
+            return emit("move", response)
         else:
             response = {
                 'error': "You cannot move in that direction.",
             }
-            return jsonify(response), 500
+            return emit("moveError", response)
 
     @socketio.on('take')
     def take_item():
