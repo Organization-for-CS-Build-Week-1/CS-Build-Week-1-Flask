@@ -126,7 +126,6 @@ class Map:
         for coords, room in self.rooms.items():
             if isinstance(room, Tunnel) or isinstance(room, DeadEnd):
                 continue
-            print(room)
             neighbors = {
                 "north": self.rooms.get((coords[0], coords[1]-1)),
                 "south": self.rooms.get((coords[0], coords[1]+1)),
@@ -147,25 +146,26 @@ class Map:
                 elif i == length-1:
                     desc_strings[i] += '.'
             desc_strings.insert(-1, 'and')
-            print(room)
             room.description += ' '.join(desc_strings)
 
     def generate_rooms(self, world=None):
+        room_count = 0
         for i in range(self.size):
             for j in range(self.size):
                 if self.grid[i][j] == 1:
                     neighbors = self.get_neighbors(i, j)
                     if len(neighbors) == 1:
-                        room = self.create_room(j, i, 'dead-end', world)
+                        room_type = 'dead-end'
                     elif len(neighbors) > 2:
-                        room = self.create_room(j, i, 'room', world)
+                        room_type = 'room'
                     else:
                         corner = self.get_corner_type(neighbors)
                         if corner and self.has_inside_diag_neighbor(corner, i, j):
-                            room = self.create_room(j, i, 'room', world)
+                            room_type = 'room'
                         else:
-                            room = self.create_room(j, i, 'tunnel', world)
-                    self.rooms[(j,i)] = room
+                            room_type = 'tunnel'
+                    self.rooms[(j,i)] = self.create_room(j, i, room_type, world)
+                    room_count += 1
         self.get_descriptions()
         return self.rooms
 
