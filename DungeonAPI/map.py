@@ -16,7 +16,7 @@ class Map:
         i = 0
         for adjective in adjectives:
             for place in places:
-                self.locations[i] = {adjective: adjective, place: place}
+                self.locations[i] = {"adjective": adjective, "place": place}
                 i += 1
         self.center     = size // 2
         self.room_count = 0
@@ -27,23 +27,35 @@ class Map:
 
     def get_loc_name(self):
         if not self.locations:
-            return {adjective: 'invisible', place: 'nowhere'}
+            return {"adjective": "invisible", "place": "nowhere"}
         idx = random.randint(0, len(self.locations)-1)
         loc_name = self.locations[idx]
         del self.locations[idx]
         return loc_name
 
+    def to_title_case(self, string):
+        chars = list(string)
+        prev = ' '
+        for i in range(len(chars)):
+            if ord(prev) not in range(ord('A'), ord('z')+1):
+                chars[i] = chars[i].upper()
+            prev = chars[i]
+        return ''.join(chars)
+
     def create_room(self, x, y, room_type, world=None):
         id          = int(f"{str(x)}{str(y)}")
         world_loc   = (x,y)
-        name        = f"Room #{id}"
-        description = f"The description for {name}."
         if room_type == "dead-end":
             return DeadEnd(world, world_loc, id)
         elif room_type == "tunnel":
             return Tunnel(world, world_loc, id)
         else:
-            return Room(world, name, description, world_loc, id)
+            loc_name    = self.get_loc_name()
+            title_adj   = self.to_title_case(loc_name["adjective"])
+            title_place = self.to_title_case(loc_name["place"])
+            name        = f"The {title_adj} {title_place}"
+            description = f"Wow, this place is so {loc_name['adjective']}!"
+            return Room(world, name, description, world_loc, loc_name, id)
 
     def set_grid(self, y, x):
         if self.grid[y][x] != 1:
