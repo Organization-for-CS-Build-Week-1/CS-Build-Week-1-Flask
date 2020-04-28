@@ -125,11 +125,11 @@ class Hammer(Item):
 def db_to_class(model_info):
     """Function that takes in DB information and returns the correct Item class"""
     if model_info.name == "Trash":
-        return Trash(model_info.weight, model_info.score, model_info.id)
+        return Trash(model_info.id, model_info.weight, model_info.score)
     if model_info.name == "Stick":
-        return Stick(model_info.weight, model_info.score, model_info.id)
+        return Stick(model_info.id, model_info.weight, model_info.score)
     if model_info.name == "Gem":
-        return Gem(model_info.weight, model_info.score, model_info.id)
+        return Gem(model_info.id, model_info.weight, model_info.score)
     if model_info.name == "Hammer":
-        return Hammer(model_info.id)
+        return Hammer(model_info.id, model_info.weight, model_info.score)
     raise TypeError("Name must be a subclass of an item")
