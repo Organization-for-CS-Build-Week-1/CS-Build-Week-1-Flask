@@ -76,8 +76,9 @@ class World:
             return {'error': 'Invalid password'}
 
         world_loc = (user.x, user.y)
+        items = { i.id:db_to_class(i) for i in user.items }
         player = Player(self, user.id, user.username, world_loc,
-                        user.password_hash, auth_key=socketid, admin_q=user.admin_q, items=user.items)
+                        user.password_hash, auth_key=socketid, admin_q=user.admin_q, items=items)
         self.players[player.auth_key] = player
         return {'message': 'logged in', 'key': player.auth_key}
 
@@ -159,7 +160,7 @@ class World:
 
         for r in Rooms.query.all():
             world_loc = (r.x, r.y)
-            items = [ db_to_class(i) for i in r.items ]
+            items = { i.id:db_to_class(i) for i in r.items }
             room = Room(self, r.name, r.description,
                         world_loc, id=r.id, items=items)
 
