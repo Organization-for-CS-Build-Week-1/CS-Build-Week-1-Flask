@@ -1,5 +1,6 @@
 from .item import Item
 
+
 class Room:
 
     def __init__(self, world, name, description, world_loc, id=0, items=None):
@@ -8,7 +9,8 @@ class Room:
         self.name        = name
         self.description = description
         self.world_loc   = world_loc
-        self.items       = Item.create_items(items) if items is not None else {}
+        self.items       = Item.create_items(
+            items) if items is not None else {}
 
     def serialize(self):
         return {
@@ -41,13 +43,13 @@ class Room:
 
     def get_room_in_direction(self, direction):
         if direction == 'n':
-            return self.world.rooms.get((self.world_loc[0], self.world_loc[1]+1), None)
+            return self.world.rooms.get((self.world_loc[0], self.world_loc[1] + 1), None)
         elif direction == 's':
-            return self.world.rooms.get((self.world_loc[0], self.world_loc[1]-1), None)
+            return self.world.rooms.get((self.world_loc[0], self.world_loc[1] - 1), None)
         elif direction == 'e':
-            return self.world.rooms.get((self.world_loc[0]+1, self.world_loc[1]), None)
+            return self.world.rooms.get((self.world_loc[0] + 1, self.world_loc[1]), None)
         elif direction == 'w':
-            return self.world.rooms.get((self.world_loc[0]-1, self.world_loc[1]), None)
+            return self.world.rooms.get((self.world_loc[0] - 1, self.world_loc[1]), None)
         else:
             return None
 
@@ -57,10 +59,17 @@ class Room:
         self.items[item.id] = item
         return True
 
-    def remove_item(self, item_id):
-        if item_id not in self.items:
+    def get_item_weight(self, item_id):
+        item = self.items.get(item_id, None)
+        print(item.weight)
+        if item is None:
             return None
+        else:
+            return item.weight
+
+    def remove_item(self, item_id):
         return self.items.pop(item_id)
+
 
 class Tunnel(Room):
 
@@ -68,6 +77,7 @@ class Tunnel(Room):
         name        = f"Tunnel segment {world_loc[0]}-{world_loc[1]}"
         description = "An underground tunnel. Where does it lead? Continue to find out!"
         super().__init__(world, name, description, world_loc, id, items)
+
 
 class DeadEnd(Room):
 

@@ -64,7 +64,7 @@ class Hammer(Item):
     """Only tool able to break rocks and uncover gems."""
 
     def __init__(self, id):
-        super().__init__("Hammer", "Tool able to break rocks and uncover gems.", 0, 0, id)
+        super().__init__("Hammer", "Tool able to break rocks and uncover gems.", 125, 0, id)
 
 
 def db_to_class(model_info):
