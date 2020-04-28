@@ -99,7 +99,7 @@ class Store(Room):
         description = "A fabulous store where you can buy all things ant!"
         super().__init__(world, name, description, world_loc, loc_name, id, items)
 
-    def buy_item(self, store_item_id, barter_value):
+    def sell_item(self, item_id, barter_value):
         item = self.items.get(item_id)
         if not item:
             return None
@@ -107,3 +107,4 @@ class Store(Room):
             return False
         self.remove_item(item_id)
         return item
+
