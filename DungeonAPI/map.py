@@ -47,9 +47,11 @@ class Map:
         id          = int(f"{str(x)}{str(y)}")
         world_loc   = (x,y)
         if room_type == "dead-end":
-            return DeadEnd(world, world_loc, id)
+            loc_name = {"place": "dead end", "adjective": None}
+            return DeadEnd(world, world_loc, loc_name, id)
         elif room_type == "tunnel":
-            return Tunnel(world, world_loc, id)
+            loc_name = {"place": "tunnel", "adjective": None}
+            return Tunnel(world, world_loc, loc_name, id)
         else:
             loc_name    = self.get_loc_name()
             title_adj   = self.to_title_case(loc_name["adjective"])
