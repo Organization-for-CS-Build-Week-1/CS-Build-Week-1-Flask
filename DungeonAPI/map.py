@@ -81,15 +81,15 @@ class Map:
         return grid_seed
 
     def get_neighbors(self, i, j):
-        neighbors = []
+        neighbors = dict()
         if i > 0 and self.grid[i-1][j] == 1:
-            neighbors.append('n')
+            neighbors['n'] = (j, i-1)
         if i < self.size-1 and self.grid[i+1][j] == 1:
-            neighbors.append('s')
+            neighbors['s'] = (j, i+1)
         if j < self.size-1 and self.grid[i][j+1] == 1:
-            neighbors.append('e')
+            neighbors['e'] = (j+1, i)
         if j > 0 and self.grid[i][j-1] == 1:
-            neighbors.append('w')
+            neighbors['w'] = (j-1, i)
         return neighbors
     
     def get_corner_type(self, neighbors):
@@ -115,7 +115,7 @@ class Map:
         for i in range(self.size):
             for j in range(self.size):
                 if self.grid[i][j] == 1:
-                    neighbors = self.get_neighbors(i, j)
+                    neighbors = self.get_neighbors(i, j).keys()
                     if len(neighbors) == 1:
                         room = self.create_room(j, i, 'dead-end', world)
                     elif len(neighbors) > 2:
