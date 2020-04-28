@@ -1,6 +1,6 @@
 import random
 import uuid
-from .item import db_to_class
+from .item import Item
 
 
 class Player:
@@ -17,7 +17,7 @@ class Player:
         self.max_weight    = 100
         self.highscore     = highscore
         # Inventory { key: Item.id, value: Item }
-        self.items         = Player.create_items(items) if items else {}
+        self.items         = Item.create_items(items) if items else {}
 
     @property
     def weight(self):
@@ -49,9 +49,6 @@ class Player:
             auth_key_list.append(random.choice(digits))
         return "".join(auth_key_list)
 
-    def create_items(items):
-        return {i.id: db_to_class(i) for i in items}
-
     def travel(self, direction, show_rooms=False):
         next_room = self.current_room.get_room_in_direction(direction)
         if next_room is not None:
@@ -60,6 +57,19 @@ class Player:
         else:
             print("You cannot move in that direction.")
             return False
+
+    def drop_item(self, item_id):
+        if item_id not in self.items:
+            return False
+        item = self.items.pop(item_id)
+        return self.current_room.add_item(item)
+
+    def take_item(self, item_id):
+        item = self.current_room.remove_item(item_id)
+        if not item or not item.id:
+            return False
+        self.items[item.id] = item
+        return True
 
     def serialize(self):
         return {

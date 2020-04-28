@@ -28,6 +28,9 @@ class Item:
             'score': self.score,
         }
 
+    def create_items(items):
+        return {i.id: db_to_class(i) for i in items}
+
 
 class Trash(Item):
     """Item with low score, low-ish weight. Try not to get too much."""
