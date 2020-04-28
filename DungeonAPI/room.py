@@ -3,7 +3,7 @@ from .item import Item
 
 class Room:
 
-    def __init__(self, world, name, description, world_loc, id=0, items=None):
+    def __init__(self, world, name, description, world_loc, loc_name=None, id=0, items=None):
         self.id          = id
         self.world       = world
         self.name        = name
@@ -28,6 +28,7 @@ class Room:
             f"\t\tname: {self.name},\n"
             f"\t\tdescription: {self.description},\n"
             f"\t\tworld_loc: {self.world_loc},\n"
+            f"\t\tloc_name: {self.loc_name},\n"
             f"\t\titems: {self.items},\n"
             f"\t}}\n"
         )
@@ -77,15 +78,16 @@ class Room:
 
 class Tunnel(Room):
 
-    def __init__(self, world, world_loc, id=0, items=None):
+    def __init__(self, world, world_loc, loc_name, id=0, items=None):
         name        = f"Tunnel segment {world_loc[0]}-{world_loc[1]}"
         description = "An underground tunnel. Where does it lead? Continue to find out!"
-        super().__init__(world, name, description, world_loc, id, items)
+        super().__init__(world, name, description, world_loc, loc_name, id, items)
 
 
 class DeadEnd(Room):
 
-    def __init__(self, world, world_loc, id=0, items=None):
+    def __init__(self, world, world_loc, loc_name, id=0, items=None):
         name = f"Dead end {world_loc[0]}-{world_loc[1]}"
         description = "A dead end. Some thoughtless ant built a tunnel to nowhere! Better turn around."
-        super().__init__(world, name, description, world_loc, id, items)
+
+        super().__init__(world, name, description, world_loc, loc_name, id, items)

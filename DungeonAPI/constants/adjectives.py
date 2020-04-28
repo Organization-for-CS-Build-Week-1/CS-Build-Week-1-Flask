@@ -1,0 +1,23 @@
+adjectives = [
+    "malodorous",
+    "decrepit",
+    "abandoned",
+    "ominous-looking",
+    "pretentiously decorated",
+    "resplendent",
+    "cromulent",
+    "forlorn",
+    "peerlessly elegant",
+    "hideous",
+    "spectacular",
+    "forgettable",
+    "haunted",
+    "preposterously old-fashioned",
+    "ancient",
+    "picturesque",
+    "exquisite",
+    "idyllic",
+    "squalid",
+    "desolate",
+    "fragrant"
+]
