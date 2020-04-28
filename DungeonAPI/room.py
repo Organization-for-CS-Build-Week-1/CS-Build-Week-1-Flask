@@ -18,7 +18,7 @@ class Room:
             "name": self.name,
             "description": self.description,
             "world_loc": self.world_loc,
-            "items": self.items,
+            "items": self.item_coords(),
         }
 
     def __repr__(self):
@@ -43,6 +43,17 @@ class Room:
             return self.world.rooms.get((self.world_loc[0]-1, self.world_loc[1]), None)
         else:
             return None
+
+    def get_item_coords(self, item):
+        """ Hash an item into a pair of coordniates. """
+        x = hash((self.name, self.description, item)) % 480
+        y = hash((item, self.name, self.description)) % 480
+
+        return (x, y)
+
+    def item_coords(self):
+        """ Hash all items into a pair of coordniates. """
+        return [ (self.get_item_coords(i),i.serialize()) for i in self.items.values() ]
 
 class Tunnel(Room):
 
