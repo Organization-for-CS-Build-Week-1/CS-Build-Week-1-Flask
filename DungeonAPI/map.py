@@ -124,6 +124,9 @@ class Map:
 
     def get_descriptions(self):
         for coords, room in self.rooms.items():
+            if isinstance(room, Tunnel) or isinstance(room, DeadEnd):
+                continue
+            print(room)
             neighbors = {
                 "north": self.rooms.get((coords[0], coords[1]-1)),
                 "south": self.rooms.get((coords[0], coords[1]+1)),
@@ -131,22 +134,21 @@ class Map:
                 "west":  self.rooms.get((coords[0]-1, coords[1]))
             }
             desc_strings = []
-            for direction, room in neighbors.items():
-                if room:
-                    article = self.get_indef_article(room.loc_name["place"])
-                    article = 'a'
-                    desc_strings.append(f"to the {direction} is {article} {room.loc_name['place']}")
+            for direction, neighbor in neighbors.items():
+                if neighbor:
+                    article = self.get_indef_article(neighbor.loc_name["place"])
+                    desc_strings.append(f"to the {direction} is {article} {neighbor.loc_name['place']}")
             for i, string in enumerate(desc_strings):
                 length = len(desc_strings)
                 if i == 0:
-                    desc_strings[i] = string[:1].upper() + string[1:]
+                    desc_strings[i] = ' ' + string[:1].upper() + string[1:]
                 if i < length-1 and length > 2:
                     desc_strings[i] += ','
-                else:
+                elif i == length-1:
                     desc_strings[i] += '.'
             desc_strings.insert(-1, 'and')
+            print(room)
             room.description += ' '.join(desc_strings)
-            print(room.description)
 
     def generate_rooms(self, world=None):
         for i in range(self.size):
