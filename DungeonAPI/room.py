@@ -77,3 +77,20 @@ class DeadEnd(Room):
         name = f"Dead end {world_loc[0]}-{world_loc[1]}"
         description = "A dead end. Some thoughtless ant built a tunnel to nowhere! Better turn around."
         super().__init__(world, name, description, world_loc, loc_name, id, items)
+
+class Store(Room):
+
+    def __init__(self, world, world_loc, loc_name, id=0, items=None):
+        name = "Store"
+        description = "A fabulous store where you can buy all things."
+        super().__init__(world, name, description, world_loc, loc_name, id, items)
+
+    def buy_item(self, store_item_id, barter_value):
+        item = self.items.get(item_id)
+        if not item:
+            return None
+        if item.score > barter_value:
+            return False
+        self.remove_item(item_id)
+        return item
+
