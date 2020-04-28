@@ -137,6 +137,10 @@ def create_app():
     def home():
         return jsonify({'Hello': 'World!'}), 200
 
+    @app.route('/socketoptions')
+    def socket_options():
+        return jsonify(["registration", "login", "test", "debug/reset", "init", "move"]), 200
+
     @app.route('/api/check')
     def check():
         # Check if server is running and load world.
@@ -215,8 +219,8 @@ def create_app():
         return emit('debug/load', response)
 
     @socketio.on('debug/reset')
-    @player_in_world
-    @player_is_admin
+    # @player_in_world
+    # @player_is_admin
     def reset(player):
         print_socket_info(request.sid)
         world.create_world()
@@ -230,7 +234,7 @@ def create_app():
         print_socket_info(request.sid)
 
         response = {
-            'rooms': player.world.get_serialized_rooms(),
+            'map': player.world.get_map_info(),
             # 'players': player.world.players,
             'you': player.serialize()
         }
@@ -244,7 +248,7 @@ def create_app():
         direction = data.get('direction')
         if direction is None:
             return emit("moveError", {
-                 "error": "You must move a direction: 'n', 's', 'e', 'w'"})
+                "error": "You must move a direction: 'n', 's', 'e', 'w'"})
 
         if player.travel(direction):
             response = {

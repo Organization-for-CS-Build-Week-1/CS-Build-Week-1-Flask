@@ -72,9 +72,21 @@ class World:
         self.players[player.auth_key] = player
         return {'message': 'logged in', 'key': player.auth_key}
 
-    def get_serialized_rooms(self):
-        return {f"{k[0]}-{k[1]}": v.serialize()
-                for k, v in self.rooms.items()}
+    def get_map_info(self):
+        """
+        Returns a dictionary the FE can use to build a map
+
+        Dict contains:
+            - coordinates where rooms exist
+            - coordinates where stores are
+        """
+        rooms, stores = [], []
+        for room_coord in self.rooms.keys():
+            # if isinstance(self.rooms[room_coord], Store):
+            #     stores.append(room_coord)
+            rooms.append(room_coord)
+
+        return {"rooms": rooms, "stores": stores}
 
     def create_world(self):
         map = Map(25, 150)
