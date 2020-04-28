@@ -26,6 +26,13 @@ class Player:
         return total_weight
 
     @property
+    def score(self):
+        total_score = 0
+        for item in self.items.values():
+            total_score += item.score
+        return total_score
+
+    @property
     def auth_key(self):
         return self.__auth_key
 
@@ -71,6 +78,8 @@ class Player:
             return False
         item = self.current_room.remove_item(item_id)
         self.items[item.id] = item
+        if self.score > self.highscore:
+            self.highscore = self.score
         return True
 
     def serialize(self):
@@ -79,6 +88,7 @@ class Player:
             'username': self.username,
             'world_loc': self.world_loc,
             'weight': self.weight,
+            'score': self.score,
             'highscore': self.highscore,
             'items': [item.serialize() for item in self.items.values()]
         }
