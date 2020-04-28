@@ -44,6 +44,7 @@ class Users(DB.Model):
     admin_q       = DB.Column(DB.Boolean, nullable=False)
     x             = DB.Column(DB.Integer, nullable=True)
     y             = DB.Column(DB.Integer, nullable=True)
+    highscore     = DB.Column(DB.Integer, nullable=False, default=0)
     items         = DB.relationship('Items', backref="player", lazy=True)
 
     def __init__(self, username, password_hash, admin_q, x, y, items=None, highscore=0):
