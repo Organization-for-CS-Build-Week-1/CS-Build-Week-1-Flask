@@ -5,7 +5,7 @@ import bcrypt
 from .room import Room
 from .player import Player
 from .map import Map
-from .item import Item
+from .item import db_to_class
 
 from .models import *
 
@@ -76,8 +76,9 @@ class World:
             return {'error': 'Invalid password'}
 
         world_loc = (user.x, user.y)
+        items = { i.id:db_to_class(i) for i in user.items }
         player = Player(self, user.id, user.username, world_loc,
-                        user.password_hash, auth_key=socketid, admin_q=user.admin_q, items=user.items)
+                        user.password_hash, auth_key=socketid, admin_q=user.admin_q, items=items)
         self.players[player.auth_key] = player
         return {'message': 'logged in', 'key': player.auth_key}
 
@@ -123,7 +124,7 @@ class World:
                              r.world_loc[0], r.world_loc[1])
             DB.session.add(new_room)
 
-            for i in r.items:
+            for i in r.items.values():
                 new_item = Items(i.name, i.weight, i.score, room_id=r.id)
                 items.append(new_item)
 
@@ -134,7 +135,7 @@ class World:
                              p.admin_q, p.world_loc[0], p.world_loc[1], highscore=p.highscore)
             DB.session.add(new_user)
 
-            for i in p.items:
+            for i in p.items.values():
                 new_item = Items(i.name, i.weight, i.score, player_id=p.id)
                 items.append(new_item)
 
@@ -159,8 +160,9 @@ class World:
 
         for r in Rooms.query.all():
             world_loc = (r.x, r.y)
+            items = { i.id:db_to_class(i) for i in r.items }
             room = Room(self, r.name, r.description,
-                        world_loc, id=r.id, items=r.items)
+                        world_loc, id=r.id, items=items)
 
             self.rooms[room.world_loc] = room
 

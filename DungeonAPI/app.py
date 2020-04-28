@@ -214,7 +214,7 @@ def create_app():
         world.save_to_db(DB)
 
         response = {'message': "Successfully saved world."}
-        return emit('debug/save', reponse)
+        return emit('debug/save', response)
 
     @socketio.on('debug/load')
     @player_in_world
@@ -284,7 +284,7 @@ def create_app():
             response = {
                 'error': 'This item is not in the room'
             }
-            emit('dropError', response)
+            emit('takeError', response)
 
     @socketio.on('drop')
     @player_in_world
