@@ -5,7 +5,7 @@ from time import time
 from uuid import uuid4
 
 from flask import Flask, jsonify, request, render_template
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room, leave_room
 from decouple import config
 
 from .room import Room
@@ -139,7 +139,7 @@ def create_app():
 
     @app.route('/socketoptions')
     def socket_options():
-        return jsonify(["registration", "login", "test", "debug/reset", "init", "move"]), 200
+        return jsonify(["register", "login", "test", "init", "move", "take", "drop"]), 200
 
     @app.route('/api/check')
     def check():
@@ -156,7 +156,7 @@ def create_app():
 
         return jsonify({'message': 'World is up and running'}), 200
 
-    @socketio.on('registration')
+    @socketio.on('register')
     def register(data):
         print_socket_info(request.sid, data)
         required = ['username', 'password1', 'password2']
@@ -233,12 +233,20 @@ def create_app():
     def init(player):
         print_socket_info(request.sid)
 
+        # Send map information
         response = {
             'map': player.world.get_map_info(),
-            # 'players': player.world.players,
-            'you': player.serialize()
+        } 
+        emit('mapinfo', response)
+
+        # Send current room information
+        current_room = str(player.world_loc)
+        join_room(current_room)
+        response = {
+            'room': player.current_room.serialize(),
+            'player': player.serialize(),
         }
-        return emit('init', response)
+        return emit("roomupdate", response, room=current_room)
 
     @socketio.on('move')
     @player_in_world
@@ -250,12 +258,18 @@ def create_app():
             return emit("moveError", {
                 "error": "You must move a direction: 'n', 's', 'e', 'w'"})
 
+        previous_room = str(player.world_loc)
+
         if player.travel(direction):
+            # If the player travels successfully
+            current_room = str(player.world_loc)
+            leave_room(previous_room)
+            join_room(current_room)
             response = {
                 'room': player.current_room.serialize(),
-                'you': player.serialize(),
+                'player': player.serialize(),
             }
-            return emit("move", response)
+            return emit("roomupdate", response, room=current_room)
         else:
             response = {
                 'error': "You cannot move in that direction.",
@@ -263,13 +277,15 @@ def create_app():
             return emit("moveError", response)
 
     @socketio.on('take')
-    def take_item():
+    @player_in_world
+    def take_item(player, data):
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
         return jsonify(response), 400
 
     @socketio.on('drop')
-    def drop_item():
+    @player_in_world
+    def drop_item(player, data):
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
         return jsonify(response), 400
