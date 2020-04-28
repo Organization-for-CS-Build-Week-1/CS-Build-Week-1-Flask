@@ -278,13 +278,20 @@ def create_app():
     def take_item(player, item_id):
         print_socket_info(request.sid, f"take {item_id}")
 
-        if player.take_item(item_id):
+        success = player.take_item(item_id)
+        if success:
             return room_update(player)
-        else:
+        elif success is None:
             response = {
                 'error': 'This item is not in the room'
             }
-            emit('takeError', response)
+            return emit('takeError', response)
+        else:
+            response = {
+                'error': 'Your inventory is too full!'
+            }
+            return emit('full', response)
+
 
     @socketio.on('drop')
     @player_in_world

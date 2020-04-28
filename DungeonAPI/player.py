@@ -64,9 +64,12 @@ class Player:
         return self.current_room.add_item(item)
 
     def take_item(self, item_id):
-        item = self.current_room.remove_item(item_id)
-        if not item or not item.id:
+        item_weight = self.current_room.get_item_weight(item_id)
+        if item_weight is None:
+            return None
+        if self.weight + item_weight > self.max_weight:
             return False
+        item = self.current_room.remove_item(item_id)
         self.items[item.id] = item
         return True
 
