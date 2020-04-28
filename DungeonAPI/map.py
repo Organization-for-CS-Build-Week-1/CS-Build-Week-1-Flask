@@ -154,7 +154,9 @@ class Map:
             for j in range(self.size):
                 if self.grid[i][j] == 1:
                     neighbors = self.get_neighbors(i, j)
-                    if len(neighbors) == 1:
+                    if room_count % 50 == 0:
+                        room_type = 'store'
+                    elif len(neighbors) == 1:
                         room_type = 'dead-end'
                     elif len(neighbors) > 2:
                         room_type = 'room'
