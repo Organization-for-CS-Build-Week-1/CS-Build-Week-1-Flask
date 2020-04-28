@@ -95,8 +95,8 @@ class DeadEnd(Room):
 class Store(Room):
 
     def __init__(self, world, world_loc, loc_name, id=0, items=None):
-        name = "Store"
-        description = "A fabulous store where you can buy all things."
+        name = "Ant Store"
+        description = "A fabulous store where you can buy all things ant!"
         super().__init__(world, name, description, world_loc, loc_name, id, items)
 
     def buy_item(self, store_item_id, barter_value):
