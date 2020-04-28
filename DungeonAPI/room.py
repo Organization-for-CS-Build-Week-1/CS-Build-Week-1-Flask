@@ -1,6 +1,4 @@
-# Implement a class to hold room information. This should have name and
-# description attributes.
-
+from .item import Item
 
 class Room:
 
@@ -11,7 +9,7 @@ class Room:
         self.description = description
         self.world_loc   = world_loc
         self.loc_name    = loc_name
-        self.items       = items if items is not None else {}
+        self.items       = Item.create_items(items) if items is not None else {}
 
     def serialize(self):
         return {
@@ -19,7 +17,8 @@ class Room:
             "name": self.name,
             "description": self.description,
             "world_loc": self.world_loc,
-            "items": self.items,
+            "items": [item.serialize() for item in self.items.values()],
+            "direction": self.directions
         }
 
     def __repr__(self):
@@ -34,6 +33,14 @@ class Room:
             f"\t}}\n"
         )
 
+    @property
+    def directions(self):
+        dir_list = []
+        for d in "nesw":
+            if self.get_room_in_direction(d) is not None:
+                dir_list.append(d)
+        return dir_list
+
     def get_room_in_direction(self, direction):
         if direction == 'n':
             return self.world.rooms.get((self.world_loc[0], self.world_loc[1]+1), None)
@@ -45,6 +52,17 @@ class Room:
             return self.world.rooms.get((self.world_loc[0]-1, self.world_loc[1]), None)
         else:
             return None
+
+    def add_item(self, item):
+        if not item or not item.id:
+            return False
+        self.items[item.id] = item
+        return True
+
+    def remove_item(self, item_id):
+        if item_id not in self.items:
+            return None
+        return self.items.pop(item_id)
 
 class Tunnel(Room):
 
