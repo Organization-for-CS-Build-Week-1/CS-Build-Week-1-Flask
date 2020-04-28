@@ -65,12 +65,31 @@ class Player:
             return False
 
     def drop_item(self, item_id):
+        """
+        Drops an item in the room.
+        
+        Returns:
+            player doesn't have item → False
+            successful drop → chatmessage for the room
+        """
         if item_id not in self.items:
             return False
         item = self.items.pop(item_id)
-        return self.current_room.add_item(item)
+        self.current_room.add_item(item)
+        return f"{self.username} dropped the {item.name}"
 
     def take_item(self, item_id):
+        """
+        Takes an item from the room.
+        
+        If the player's new score is greater than the highscore,
+        also updates highscore.
+        
+        Returns:
+            item not in room → None
+            player's inventory too full → False
+            successful take → chatmessage for the room
+        """
         item_weight = self.current_room.get_item_weight(item_id)
         if item_weight is None:
             return None
@@ -80,7 +99,7 @@ class Player:
         self.items[item.id] = item
         if self.score > self.highscore:
             self.highscore = self.score
-        return True
+        return f"{self.username} took the {item.name}"
 
     def serialize(self):
         return {
