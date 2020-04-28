@@ -71,9 +71,15 @@ class Room:
         self.items[item.id] = item
         return True
 
-    def remove_item(self, item_id):
-        if item_id not in self.items:
+    def get_item_weight(self, item_id):
+        item = self.items.get(item_id, None)
+        print(item.weight)
+        if item is None:
             return None
+        else:
+            return item.weight
+
+    def remove_item(self, item_id):
         return self.items.pop(item_id)
 
 
@@ -83,6 +89,7 @@ class Tunnel(Room):
         name        = f"Tunnel segment {world_loc[0]}-{world_loc[1]}"
         description = "An underground tunnel. Where does it lead? Continue to find out!"
         super().__init__(world, name, description, world_loc, loc_name, id, items)
+
 
 
 class DeadEnd(Room):
