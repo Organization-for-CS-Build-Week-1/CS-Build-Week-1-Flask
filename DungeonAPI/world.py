@@ -77,7 +77,7 @@ class World:
 
         world_loc = (user.x, user.y)
         player = Player(self, user.id, user.username, world_loc,
-                        user.password_hash, auth_key=socketid, items=user.items)
+                        user.password_hash, auth_key=socketid, admin_q=user.admin_q, items=user.items)
         self.players[player.auth_key] = player
         return {'message': 'logged in', 'key': player.auth_key}
 

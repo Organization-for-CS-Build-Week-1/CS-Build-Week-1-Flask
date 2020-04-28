@@ -53,6 +53,7 @@ def create_app():
         """
         @wraps(f)
         def handler(player, *args, **kwargs):
+            print(player.admin_q)
             if not player.admin_q:
                 response = {'error': "User not authorized"}
                 return emit('noAdmin', response)
@@ -74,12 +75,9 @@ def create_app():
     DB.init_app(app)
 
     with app.app_context():
-        # Creates tiny world with one player and item in our DB
-
-        DB.drop_all()
-        DB.create_all()
-
-        DB.session.add(Worlds(world.password_salt, world.map_seed))
+        # Creates world with one player and 3 items in our DB
+        world.create_world()  # TODO: Remove when done testing.
+        world.save_to_db(DB)
         quth = world.add_player("6k6", "fdfhgg", "fdfhgg")["key"]
         player_u = world.get_player_by_auth(quth)
         new_i1 = Items("Hammer", 0, 0, player_id=player_u.id)
@@ -215,8 +213,8 @@ def create_app():
         return emit('debug/load', response)
 
     @socketio.on('debug/reset')
-    # @player_in_world
-    # @player_is_admin
+    @player_in_world
+    @player_is_admin
     def reset(player):
         print_socket_info(request.sid)
         world.create_world()
