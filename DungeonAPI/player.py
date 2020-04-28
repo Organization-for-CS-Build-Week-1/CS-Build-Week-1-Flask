@@ -57,6 +57,19 @@ class Player:
             print("You cannot move in that direction.")
             return False
 
+    def drop_item(self, item_id):
+        if item_id not in self.items:
+            return False
+        item = self.items.pop(item_id)
+        return self.current_room.add_item(item)
+
+    def take_item(self, item_id):
+        item = self.current_room.remove_item(item_id)
+        if not item or not item.id:
+            return False
+        self.items[item.id] = item
+        return True
+
     def serialize(self):
         return {
             'id': self.id,
