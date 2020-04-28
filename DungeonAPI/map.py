@@ -36,8 +36,9 @@ class Map:
     def to_title_case(self, string):
         chars = list(string)
         prev = ' '
+        word_breaks = [' ', '-']
         for i in range(len(chars)):
-            if ord(prev) not in range(ord('A'), ord('z')+1):
+            if prev in word_breaks:
                 chars[i] = chars[i].upper()
             prev = chars[i]
         return ''.join(chars)
