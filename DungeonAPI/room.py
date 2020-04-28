@@ -51,6 +51,17 @@ class Room:
         else:
             return None
 
+    def add_item(self, item):
+        if not item or not item.id:
+            return False
+        self.items[item.id] = item
+        return True
+
+    def remove_item(self, item_id):
+        if item_id not in self.items:
+            return None
+        return self.items.pop(item_id)
+
 class Tunnel(Room):
 
     def __init__(self, world, world_loc, id=0, items=None):
