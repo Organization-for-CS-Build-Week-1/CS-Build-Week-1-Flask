@@ -127,7 +127,6 @@ class Map:
         for coords, room in self.rooms.items():
             if isinstance(room, Tunnel) or isinstance(room, DeadEnd):
                 continue
-            print(room)
             neighbors = {
                 "north": self.rooms.get((coords[0], coords[1]-1)),
                 "south": self.rooms.get((coords[0], coords[1]+1)),
@@ -148,7 +147,6 @@ class Map:
                 elif i == length-1:
                     desc_strings[i] += '.'
             desc_strings.insert(-1, 'and')
-            print(room)
             room.description += ' '.join(desc_strings)
 
     def generate_rooms(self, world=None):
@@ -185,7 +183,6 @@ class Map:
                 else:
                     item_str = "\x1b[1;30m0"
                 row_str += item_str
-            print(row_str)
 
 
 class Walker:
