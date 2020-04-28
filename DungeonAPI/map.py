@@ -1,6 +1,7 @@
 import random
 import time
 from .room import Room, Tunnel, DeadEnd
+from .item import Trash, Stick, Gem, Hammer
 
 
 class Map:
@@ -22,12 +23,20 @@ class Map:
         world_loc   = (x,y)
         name        = f"Room #{id}"
         description = f"The description for {name}."
+
+        potential_items = [Trash(id) for _ in range(10)]
+        potential_items += [Stick(id) for _ in range(10)]
+        potential_items += [Hammer(id) for _ in range(5)]
+        potential_items += [Gem(id) for _ in range(1)]
+
+        items = dict([ (hash((i.id, i)),i) for i in random.choices(potential_items, k=25) ])
+ 
         if room_type == "dead-end":
             return DeadEnd(world, world_loc, id)
         elif room_type == "tunnel":
             return Tunnel(world, world_loc, id)
         else:
-            return Room(world, name, description, world_loc, id)
+            return Room(world, name, description, world_loc, id, items)
 
     def set_grid(self, y, x):
         if self.grid[y][x] != 1:
