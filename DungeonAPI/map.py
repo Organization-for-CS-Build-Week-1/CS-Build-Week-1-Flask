@@ -33,16 +33,6 @@ class Map:
         del self.locations[idx]
         return loc_name
 
-    def to_title_case(self, string):
-        chars = list(string)
-        prev = ' '
-        word_breaks = [' ', '-']
-        for i in range(len(chars)):
-            if prev in word_breaks:
-                chars[i] = chars[i].upper()
-            prev = chars[i]
-        return ''.join(chars)
-
     def create_room(self, x, y, room_type, world=None):
         id          = int(f"{str(x)}{str(y)}")
         world_loc   = (x,y)
@@ -54,8 +44,8 @@ class Map:
             return Tunnel(world, world_loc, loc_name, id)
         else:
             loc_name    = self.get_loc_name()
-            title_adj   = self.to_title_case(loc_name["adjective"])
-            title_place = self.to_title_case(loc_name["place"])
+            title_adj   = loc_name["adjective"].title()
+            title_place = loc_name["place"].title()
             name        = f"The {title_adj} {title_place}"
             description = f"Wow, this place is so {loc_name['adjective']}!"
             return Room(world, name, description, world_loc, loc_name, id)
