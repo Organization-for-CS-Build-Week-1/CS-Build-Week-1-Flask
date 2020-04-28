@@ -9,6 +9,7 @@ class Room:
         self.name        = name
         self.description = description
         self.world_loc   = world_loc
+        self.loc_name    = loc_name
         self.items       = items if items is not None else {}
 
     def serialize(self):
