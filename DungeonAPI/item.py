@@ -7,17 +7,27 @@ Types of Items:
 
 - Hammer: no   score, no weight.   Can be used to break rocks
 """
+from random import randint
 
 
 class Item:
     """Base class for all Items. Use Child classes when possible"""
 
-    def __init__(self, name, description, weight, score, id=0):
+    def __init__(self, name, description, id=0, weight=None, score=None):
         self.name        = name
         self.description = description
-        self.weight      = weight
-        self.score       = score
         self.id          = id
+
+        if weight == None and score == None:
+            self.weight = 1
+            self.score  = 1
+        elif weight == None:
+            self.weight = 1
+        elif score == None:
+            self.score  = 1
+        else:
+            self.weight = weight
+            self.score  = score
 
     def serialize(self):
         return {
@@ -28,40 +38,90 @@ class Item:
             'score': self.score,
         }
 
+    def __repr__(self):
+        return (
+            f"{{\n"
+            f"\t\tid: {self.id},\n"
+            f"\t\tname: {self.name},\n"
+            f"\t\tdescription: {self.description},\n"
+            f"\t\tweight: {self.weight},\n"
+            f"\t\tscore: {self.score},\n"
+            f"\t}}\n"
+        )
+
 
 class Trash(Item):
     """Item with low score, low-ish weight. Try not to get too much."""
 
-    def __init__(self, weight, score, id):
-        super().__init__("Trash", "Low score, low weight. Try not to get too much", weight, score, id)
+    def __init__(self, id, weight = None, score = None):
+        if weight == None and score == None:
+            self.weight = randint(10, 30)
+            self.score  = randint(1, 10) * 100
+        elif weight == None:
+            self.weight = randint(10, 30)
+        elif score == None:
+            self.score  = randint(1, 10) * 100
+        else:
+            self.weight = weight
+            self.score  = score
+
+        super().__init__("Trash", "Low score, low weight. Try not to get too much", id, self.weight, self.score)
 
 
 class Stick(Item):
     """Item with medium score, medium weight. not bad for an ant."""
 
-    def __init__(self, weight, score, id):
-        super().__init__("Stick", "Medium score, medium weight. not bad for an ant", weight, score, id)
+    def __init__(self, id, weight=None, score=None):
+        if weight == None and score == None:
+            self.weight = randint(30, 70)
+            self.score  = randint(10, 25) * 100
+        elif weight == None:
+            self.weight = randint(30, 70)
+        elif score == None:
+            self.score  = randint(10, 25) * 100
+        else:
+            self.weight = weight
+            self.score  = score
+
+        super().__init__("Stick", "Medium score, medium weight. not bad for an ant", id, self.weight, self.score)
 
 
 class Gem(Item):
     """Item with high score, high weight. Covered by a rock."""
 
-    def __init__(self, weight, score, id):
-        super().__init__("Gem", "High score, high weight. Covered by a rock.", weight, score, id)
+    def __init__(self, id, weight=None, score=None):
+        if weight == None and score == None:
+            self.weight = randint(50, 100)
+            self.score  = randint(50, 100) * 100
+        elif weight == None:
+            self.weight = randint(10, 100)
+        elif score == None:
+            self.score  = randint(50, 100) * 100
+        else:
+            self.weight = weight
+            self.score  = score
+
+        super().__init__("Gem", "High score, high weight. Covered by a rock.", id, self.weight, self.score)
         # Whether the gem is trapped in a rock. Always initialized True
         self.covered = True
-
-    def serialize(self):
-        output = super().serialize()
-        output['covered'] = self.covered
-        return output
 
 
 class Hammer(Item):
     """Only tool able to break rocks and uncover gems."""
 
-    def __init__(self, id):
-        super().__init__("Hammer", "Tool able to break rocks and uncover gems.", 0, 0, id)
+    def __init__(self, id, weight=None, score=None):
+        if weight == None and score == None:
+            self.weight = randint(50, 100)
+            self.score  = randint(25, 50) * 100
+        elif weight == None:
+            self.weight = randint(50, 100)
+        elif score == None:
+            self.score  = randint(25, 50) * 100
+        else:
+            self.weight = weight
+            self.score  = score
+
+        super().__init__("Hammer", "Tool able to break rocks and uncover gems.", id, self.weight, self.score)
 
 
 def db_to_class(model_info):
