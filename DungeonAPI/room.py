@@ -1,6 +1,4 @@
-# Implement a class to hold room information. This should have name and
-# description attributes.
-
+from .item import Item
 
 class Room:
 
@@ -10,7 +8,7 @@ class Room:
         self.name        = name
         self.description = description
         self.world_loc   = world_loc
-        self.items       = items if items is not None else {}
+        self.items       = Item.create_items(items) if items is not None else {}
 
     def serialize(self):
         return {
@@ -18,7 +16,7 @@ class Room:
             "name": self.name,
             "description": self.description,
             "world_loc": self.world_loc,
-            "items": self.items,
+            "items": [item.serialize() for item in self.items.values()],
             "direction": self.directions
         }
 
