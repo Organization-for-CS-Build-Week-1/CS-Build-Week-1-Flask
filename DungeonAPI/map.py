@@ -29,7 +29,7 @@ class Map:
         potential_items += [Hammer(random.randint(0, 10**8)) for _ in range(5)]
         potential_items += [Gem(random.randint(0, 10**8)) for _ in range(1)]
 
-        items = dict([ (i.id,i) for i in random.choices(potential_items, k=25) ])
+        items = dict([ (i.id,i) for i in random.choices(potential_items, k=10) ])
  
         if room_type == "dead-end":
             return DeadEnd(world, world_loc, id)
