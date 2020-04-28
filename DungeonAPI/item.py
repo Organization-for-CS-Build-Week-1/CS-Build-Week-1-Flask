@@ -53,7 +53,7 @@ class Item:
 class Trash(Item):
     """Item with low score, low-ish weight. Try not to get too much."""
 
-    def __init__(self, id, weight = None, score = None):
+    def __init__(self, id, weight=None, score=None):
         if weight == None and score == None:
             self.weight = randint(10, 30)
             self.score  = randint(1, 10) * 100
@@ -65,7 +65,8 @@ class Trash(Item):
             self.weight = weight
             self.score  = score
 
-        super().__init__("Trash", "Low score, low weight. Try not to get too much", id, self.weight, self.score)
+        super().__init__("Trash", "Low score, low weight. Try not to get too much.",
+                         id, self.weight, self.score)
 
 
 class Stick(Item):
@@ -83,11 +84,12 @@ class Stick(Item):
             self.weight = weight
             self.score  = score
 
-        super().__init__("Stick", "Medium score, medium weight. not bad for an ant", id, self.weight, self.score)
+        super().__init__("Stick", "Medium score, medium weight. not bad for an ant.",
+                         id, self.weight, self.score)
 
 
 class Gem(Item):
-    """Item with high score, high weight. Covered by a rock."""
+    """Item with high score, high weight."""
 
     def __init__(self, id, weight=None, score=None):
         if weight == None and score == None:
@@ -101,11 +103,11 @@ class Gem(Item):
             self.weight = weight
             self.score  = score
 
-        super().__init__("Gem", "High score, high weight. Covered by a rock.", id, self.weight, self.score)
+        super().__init__("Gem", "High score, high weight.", id, self.weight, self.score)
 
 
 class Hammer(Item):
-    """Only tool able to break rocks and uncover gems."""
+    """A tool. Useful? Maybe not, but it has value.."""
 
     def __init__(self, id, weight=None, score=None):
         if weight == None and score == None:
@@ -119,17 +121,18 @@ class Hammer(Item):
             self.weight = weight
             self.score  = score
 
-        super().__init__("Hammer", "Tool able to break rocks and uncover gems.", id, self.weight, self.score)
+        super().__init__("Hammer", "A tool. Useful? Maybe not, but it has value.",
+                         id, self.weight, self.score)
 
 
 def db_to_class(model_info):
     """Function that takes in DB information and returns the correct Item class"""
     if model_info.name == "Trash":
-        return Trash(model_info.weight, model_info.score, model_info.id)
+        return Trash(model_info.id, model_info.weight, model_info.score)
     if model_info.name == "Stick":
-        return Stick(model_info.weight, model_info.score, model_info.id)
+        return Stick(model_info.id, model_info.weight, model_info.score)
     if model_info.name == "Gem":
-        return Gem(model_info.weight, model_info.score, model_info.id)
+        return Gem(model_info.id, model_info.weight, model_info.score)
     if model_info.name == "Hammer":
         return Hammer(model_info.id)
     raise TypeError("Name must be a subclass of an item")
