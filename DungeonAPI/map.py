@@ -1,6 +1,9 @@
 import random
 import time
 from .room import Room, Tunnel, DeadEnd
+from .item import Trash, Stick, Gem, Hammer
+from .constants.adjectives import adjectives
+from .constants.places import places
 
 
 class Map:
@@ -10,6 +13,12 @@ class Map:
         for i in range(size):
             row = row.copy()
             self.grid.append(row)
+        self.locations = [''] * (len(adjectives) * len(places))
+        i = 0
+        for adjective in adjectives:
+            for place in places:
+                self.locations[i] = {"adjective": adjective, "place": place}
+                i += 1
         self.center     = size // 2
         self.room_count = 0
         self.size       = size
@@ -17,17 +26,40 @@ class Map:
         self.rooms      = dict()
         self.set_grid(self.center, self.center)
 
+    def get_loc_name(self):
+        if not self.locations:
+            return {"adjective": "invisible", "place": "nowhere"}
+        idx = random.randint(0, len(self.locations)-1)
+        loc_name = self.locations[idx]
+        del self.locations[idx]
+        return loc_name
+
     def create_room(self, x, y, room_type, world=None):
         id          = int(f"{str(x)}{str(y)}")
         world_loc   = (x,y)
         name        = f"Room #{id}"
         description = f"The description for {name}."
+
+        potential_items = [Trash(random.randint(0, 10**8)) for _ in range(10)]
+        potential_items += [Stick(random.randint(0, 10**8)) for _ in range(10)]
+        potential_items += [Hammer(random.randint(0, 10**8)) for _ in range(5)]
+        potential_items += [Gem(random.randint(0, 10**8)) for _ in range(1)]
+
+        items = { i.id:i for i in random.choices(potential_items, k=10) }
+
         if room_type == "dead-end":
-            return DeadEnd(world, world_loc, id)
+            loc_name = {"place": "dead end", "adjective": None}
+            return DeadEnd(world, world_loc, loc_name, id)
         elif room_type == "tunnel":
-            return Tunnel(world, world_loc, id)
+            loc_name = {"place": "tunnel", "adjective": None}
+            return Tunnel(world, world_loc, loc_name, id)
         else:
-            return Room(world, name, description, world_loc, id)
+            loc_name    = self.get_loc_name()
+            title_adj   = loc_name["adjective"].title()
+            title_place = loc_name["place"].title()
+            name        = f"The {title_adj} {title_place}"
+            description = f"Wow, this place is so {loc_name['adjective']}!"
+            return Room(world, name, description, world_loc, loc_name, id, items)
 
     def set_grid(self, y, x):
         if self.grid[y][x] != 1:
@@ -82,6 +114,43 @@ class Map:
         }
         return switcher.get(corner_type) == 1
 
+    def get_indef_article(self, string):
+        vowels = ['a', 'e', 'i', 'o', 'u']
+        stupid_exceptions = ['union', 'university', 'united', 'uniform']
+        string = string.lower()
+        if string[0] in vowels and string not in stupid_exceptions:
+            return 'an'
+        else:
+            return 'a'
+
+    def get_descriptions(self):
+        for coords, room in self.rooms.items():
+            if isinstance(room, Tunnel) or isinstance(room, DeadEnd):
+                continue
+            print(room)
+            neighbors = {
+                "north": self.rooms.get((coords[0], coords[1]-1)),
+                "south": self.rooms.get((coords[0], coords[1]+1)),
+                "east":  self.rooms.get((coords[0]+1, coords[1])),
+                "west":  self.rooms.get((coords[0]-1, coords[1]))
+            }
+            desc_strings = []
+            for direction, neighbor in neighbors.items():
+                if neighbor:
+                    article = self.get_indef_article(neighbor.loc_name["place"])
+                    desc_strings.append(f"to the {direction} is {article} {neighbor.loc_name['place']}")
+            for i, string in enumerate(desc_strings):
+                length = len(desc_strings)
+                if i == 0:
+                    desc_strings[i] = ' ' + string[:1].upper() + string[1:]
+                if i < length-1 and length > 2:
+                    desc_strings[i] += ','
+                elif i == length-1:
+                    desc_strings[i] += '.'
+            desc_strings.insert(-1, 'and')
+            print(room)
+            room.description += ' '.join(desc_strings)
+
     def generate_rooms(self, world=None):
         for i in range(self.size):
             for j in range(self.size):
@@ -98,6 +167,7 @@ class Map:
                         else:
                             room = self.create_room(j, i, 'tunnel', world)
                     self.rooms[(j,i)] = room
+        self.get_descriptions()
         return self.rooms
 
     def print_grid(self):

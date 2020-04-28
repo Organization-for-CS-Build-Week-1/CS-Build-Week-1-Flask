@@ -3,14 +3,13 @@ from .item import Item
 
 class Room:
 
-    def __init__(self, world, name, description, world_loc, id=0, items=None):
+    def __init__(self, world, name, description, world_loc, loc_name=None, id=0, items=None):
         self.id          = id
         self.world       = world
         self.name        = name
         self.description = description
         self.world_loc   = world_loc
-        self.items       = Item.create_items(
-            items) if items is not None else {}
+        self.items       = items if items is not None else {}
 
     def serialize(self):
         return {
@@ -18,7 +17,7 @@ class Room:
             "name": self.name,
             "description": self.description,
             "world_loc": self.world_loc,
-            "items": [item.serialize() for item in self.items.values()],
+            "items": self.item_coords(),
             "direction": self.directions
         }
 
@@ -29,6 +28,7 @@ class Room:
             f"\t\tname: {self.name},\n"
             f"\t\tdescription: {self.description},\n"
             f"\t\tworld_loc: {self.world_loc},\n"
+            f"\t\tloc_name: {self.loc_name},\n"
             f"\t\titems: {self.items},\n"
             f"\t}}\n"
         )
@@ -53,6 +53,17 @@ class Room:
         else:
             return None
 
+    def get_item_coords(self, item):
+        """ Hash an item into a pair of coordniates. """
+        x = hash((self.name, self.description, item)) % 480
+        y = hash((item, self.name, self.description)) % 480
+
+        return (x, y)
+
+    def item_coords(self):
+        """ Hash all items into a pair of coordniates. """
+        return [(self.get_item_coords(i), i.serialize()) for i in self.items.values()]
+
     def add_item(self, item):
         if not item or not item.id:
             return False
@@ -73,15 +84,17 @@ class Room:
 
 class Tunnel(Room):
 
-    def __init__(self, world, world_loc, id=0, items=None):
+    def __init__(self, world, world_loc, loc_name, id=0, items=None):
         name        = f"Tunnel segment {world_loc[0]}-{world_loc[1]}"
         description = "An underground tunnel. Where does it lead? Continue to find out!"
-        super().__init__(world, name, description, world_loc, id, items)
+        super().__init__(world, name, description, world_loc, loc_name, id, items)
+
 
 
 class DeadEnd(Room):
 
-    def __init__(self, world, world_loc, id=0, items=None):
+    def __init__(self, world, world_loc, loc_name, id=0, items=None):
         name = f"Dead end {world_loc[0]}-{world_loc[1]}"
         description = "A dead end. Some thoughtless ant built a tunnel to nowhere! Better turn around."
-        super().__init__(world, name, description, world_loc, id, items)
+
+        super().__init__(world, name, description, world_loc, loc_name, id, items)

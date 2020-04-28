@@ -214,7 +214,7 @@ def create_app():
         world.save_to_db(DB)
 
         response = {'message': "Successfully saved world."}
-        return emit('debug/save', reponse)
+        return emit('debug/save', response)
 
     @socketio.on('debug/load')
     @player_in_world
