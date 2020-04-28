@@ -134,5 +134,5 @@ def db_to_class(model_info):
     if model_info.name == "Gem":
         return Gem(model_info.id, model_info.weight, model_info.score)
     if model_info.name == "Hammer":
-        return Hammer(model_info.id)
+        return Hammer(model_info.id, model_info.weight, model_info.score)
     raise TypeError("Name must be a subclass of an item")
