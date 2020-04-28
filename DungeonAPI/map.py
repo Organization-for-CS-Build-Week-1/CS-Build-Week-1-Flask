@@ -1,6 +1,6 @@
 import random
 import time
-from .room import Room, Tunnel, DeadEnd
+from .room import Room, Tunnel, DeadEnd, Store
 from .constants.adjectives import adjectives
 from .constants.places import places
 
@@ -52,6 +52,9 @@ class Map:
         elif room_type == "tunnel":
             loc_name = {"place": "tunnel", "adjective": None}
             return Tunnel(world, world_loc, loc_name, id)
+        elif room_type == "store":
+            loc_name = {"place": "ant store", "adjective": None}
+            return Store(world, world_loc, loc_name, id)
         else:
             loc_name    = self.get_loc_name()
             title_adj   = self.to_title_case(loc_name["adjective"])
