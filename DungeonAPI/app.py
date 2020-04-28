@@ -53,7 +53,6 @@ def create_app():
         """
         @wraps(f)
         def handler(player, *args, **kwargs):
-            print(player.admin_q)
             if not player.admin_q:
                 response = {'error': "User not authorized"}
                 return emit('noAdmin', response)
