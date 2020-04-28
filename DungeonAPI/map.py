@@ -71,7 +71,9 @@ class Map:
     def generate_grid(self, map_seed = None):
         walkers = [
             Walker(self, 1, 2, self.center, self.center + 1),
-            Walker(self, 2, 3, self.center + 1, self.center)
+            Walker(self, 2, 3, self.center + 1, self.center),
+            Walker(self, 3, 3, self.center - 1, self.center),
+            Walker(self, 4, 2, self.center, self.center - 1)
         ]
         if map_seed is None:
             grid_seed = random.randint(0, 10**6)
