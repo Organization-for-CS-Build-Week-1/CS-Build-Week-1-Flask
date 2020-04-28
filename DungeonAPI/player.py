@@ -1,6 +1,5 @@
 import random
 import uuid
-from .item import db_to_class
 
 
 class Player:
@@ -17,7 +16,7 @@ class Player:
         self.max_weight    = 100
         self.highscore     = highscore
         # Inventory { key: Item.id, value: Item }
-        self.items         = Player.create_items(items) if items else {}
+        self.items         = items if items is not None else {}
 
     @property
     def weight(self):
@@ -48,9 +47,6 @@ class Player:
         for i in range(40):
             auth_key_list.append(random.choice(digits))
         return "".join(auth_key_list)
-
-    def create_items(items):
-        return {i.id: db_to_class(i) for i in items}
 
     def travel(self, direction, show_rooms=False):
         next_room = self.current_room.get_room_in_direction(direction)
