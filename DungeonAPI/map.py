@@ -1,6 +1,7 @@
 import random
 import time
 from .room import Room, Tunnel, DeadEnd, Store
+from .item import Trash, Stick, Gem, Hammer
 from .constants.adjectives import adjectives
 from .constants.places import places
 
@@ -33,19 +34,19 @@ class Map:
         del self.locations[idx]
         return loc_name
 
-    def to_title_case(self, string):
-        chars = list(string)
-        prev = ' '
-        word_breaks = [' ', '-']
-        for i in range(len(chars)):
-            if prev in word_breaks:
-                chars[i] = chars[i].upper()
-            prev = chars[i]
-        return ''.join(chars)
-
     def create_room(self, x, y, room_type, world=None):
         id          = int(f"{str(x)}{str(y)}")
         world_loc   = (x,y)
+        name        = f"Room #{id}"
+        description = f"The description for {name}."
+
+        potential_items = [Trash(random.randint(0, 10**8)) for _ in range(10)]
+        potential_items += [Stick(random.randint(0, 10**8)) for _ in range(10)]
+        potential_items += [Hammer(random.randint(0, 10**8)) for _ in range(5)]
+        potential_items += [Gem(random.randint(0, 10**8)) for _ in range(1)]
+
+        items = { i.id:i for i in random.choices(potential_items, k=10) }
+
         if room_type == "dead-end":
             loc_name = {"place": "dead end", "adjective": None}
             return DeadEnd(world, world_loc, loc_name, id)
@@ -57,11 +58,11 @@ class Map:
             return Store(world, world_loc, loc_name, id)
         else:
             loc_name    = self.get_loc_name()
-            title_adj   = self.to_title_case(loc_name["adjective"])
-            title_place = self.to_title_case(loc_name["place"])
+            title_adj   = loc_name["adjective"].title()
+            title_place = loc_name["place"].title()
             name        = f"The {title_adj} {title_place}"
             description = f"Wow, this place is so {loc_name['adjective']}!"
-            return Room(world, name, description, world_loc, loc_name, id)
+            return Room(world, name, description, world_loc, loc_name, id, items)
 
     def set_grid(self, y, x):
         if self.grid[y][x] != 1:
@@ -193,7 +194,6 @@ class Map:
                 else:
                     item_str = "\x1b[1;30m0"
                 row_str += item_str
-            print(row_str)
 
 
 class Walker:

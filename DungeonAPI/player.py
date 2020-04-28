@@ -1,6 +1,5 @@
 import random
 import uuid
-from .item import Item
 
 
 class Player:
@@ -17,7 +16,7 @@ class Player:
         self.max_weight    = 100
         self.highscore     = highscore
         # Inventory { key: Item.id, value: Item }
-        self.items         = Item.create_items(items) if items else {}
+        self.items         = items if items is not None else {}
 
     @property
     def weight(self):
