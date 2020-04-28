@@ -182,6 +182,8 @@ class Map:
                     room = self.rooms.get((j,i))
                     if isinstance(room, Tunnel):
                         item_str = "\x1b[1;32m1"
+                    elif isinstance(room, Store):
+                        item_str = "\x1b[1;34m1"
                     elif isinstance(room, DeadEnd):
                         item_str = "\x1b[1;35m1"
                     else:
