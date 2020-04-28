@@ -18,6 +18,21 @@ from .models import DB, Users, Items, Worlds
 
 def create_app():
 
+    def room_update(player):
+        """
+        Emits info via socket to all players
+        in the same room as the given player.
+
+        Used for init/move/take/drop,
+        to update all players in room simulatneously.
+            Player → Player who just performed action
+        """
+        response = {
+            'room': player.current_room.serialize(),
+            'player': player.serialize(),
+        }
+        return emit("roomupdate", response, room=str(player.world_loc))
+
     def print_socket_info(sid, data=None):
         print(f"\n{sid}")
         if data:
@@ -233,20 +248,14 @@ def create_app():
         emit('mapinfo', response)
 
         # Send current room information
-        current_room = str(player.world_loc)
-        join_room(current_room)
-        response = {
-            'room': player.current_room.serialize(),
-            'player': player.serialize(),
-        }
-        return emit("roomupdate", response, room=current_room)
+        join_room(str(player.world_loc))
+        return room_update(player)
 
     @socketio.on('move')
     @player_in_world
-    def move(player, data):
-        print_socket_info(request.sid, data)
+    def move(player, direction):
+        print_socket_info(request.sid, direction)
 
-        direction = data.get('direction')
         if direction is None:
             return emit("moveError", {
                 "error": "You must move a direction: 'n', 's', 'e', 'w'"})
@@ -255,14 +264,9 @@ def create_app():
 
         if player.travel(direction):
             # If the player travels successfully
-            current_room = str(player.world_loc)
             leave_room(previous_room)
-            join_room(current_room)
-            response = {
-                'room': player.current_room.serialize(),
-                'player': player.serialize(),
-            }
-            return emit("roomupdate", response, room=current_room)
+            join_room(str(player.world_loc))
+            return room_update(player)
         else:
             response = {
                 'error': "You cannot move in that direction.",
@@ -271,17 +275,29 @@ def create_app():
 
     @socketio.on('take')
     @player_in_world
-    def take_item(player, data):
-        # IMPLEMENT THIS
-        response = {'error': "Not implemented"}
-        return jsonify(response), 400
+    def take_item(player, item_id):
+        print_socket_info(request.sid, f"take {item_id}")
+
+        if player.take_item(item_id):
+            return room_update(player)
+        else:
+            response = {
+                'error': 'This item is not in the room'
+            }
+            emit('dropError', response)
 
     @socketio.on('drop')
     @player_in_world
-    def drop_item(player, data):
-        # IMPLEMENT THIS
-        response = {'error': "Not implemented"}
-        return jsonify(response), 400
+    def drop_item(player, item_id):
+        print_socket_info(request.sid, f"drop {item_id}")
+
+        if player.drop_item(item_id):
+            return room_update(player)
+        else:
+            response = {
+                'error': 'You don\'t have this item'
+            }
+            emit('dropError', response)
 
     @socketio.on('inventory')
     def inventory():
