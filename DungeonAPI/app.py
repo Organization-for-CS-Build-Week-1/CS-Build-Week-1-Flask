@@ -284,7 +284,7 @@ def create_app():
             response = {
                 'error': 'This item is not in the room'
             }
-            emit('dropError', response)
+            emit('takeError', response)
 
     @socketio.on('drop')
     @player_in_world
