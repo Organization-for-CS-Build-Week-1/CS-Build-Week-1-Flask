@@ -111,6 +111,41 @@ class Map:
         }
         return switcher.get(corner_type) == 1
 
+    def get_indef_article(self, string):
+        vowels = ['a', 'e', 'i', 'o', 'u']
+        stupid_exceptions = ['union', 'university', 'united', 'uniform']
+        string = string.lower()
+        if string[0] in vowels and string not in stupid_exceptions:
+            return 'an'
+        else:
+            return 'a'
+
+    def get_descriptions(self):
+        for coords, room in self.rooms.items():
+            neighbors = {
+                "north": self.rooms.get((coords[0], coords[1]-1)),
+                "south": self.rooms.get((coords[0], coords[1]+1)),
+                "east":  self.rooms.get((coords[0]+1, coords[1])),
+                "west":  self.rooms.get((coords[0]-1, coords[1]))
+            }
+            desc_strings = []
+            for direction, room in neighbors.items():
+                if room:
+                    article = self.get_indef_article(room.loc_name["place"])
+                    article = 'a'
+                    desc_strings.append(f"to the {direction} is {article} {room.loc_name['place']}")
+            for i, string in enumerate(desc_strings):
+                length = len(desc_strings)
+                if i == 0:
+                    desc_strings[i] = string[:1].upper() + string[1:]
+                if i < length-1 and length > 2:
+                    desc_strings[i] += ','
+                else:
+                    desc_strings[i] += '.'
+            desc_strings.insert(-1, 'and')
+            room.description += ' '.join(desc_strings)
+            print(room.description)
+
     def generate_rooms(self, world=None):
         for i in range(self.size):
             for j in range(self.size):
@@ -127,6 +162,7 @@ class Map:
                         else:
                             room = self.create_room(j, i, 'tunnel', world)
                     self.rooms[(j,i)] = room
+        self.get_descriptions()
         return self.rooms
 
     def print_grid(self):
