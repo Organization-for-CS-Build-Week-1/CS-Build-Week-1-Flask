@@ -13,6 +13,15 @@ class Room:
         self.loc_name    = loc_name
         self.items       = items if items is not None else {}
 
+    def serialize(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "world_loc": self.world_loc,
+            "items": self.items,
+        }
+
     def __repr__(self):
         return (
             f"{{\n"

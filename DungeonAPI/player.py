@@ -1,12 +1,13 @@
 import random
 import uuid
+from .item import db_to_class
 
 
 class Player:
-    def __init__(self, world, id, name, world_loc, password_hash, highscore=0, admin_q=False, items=None):
+    def __init__(self, world, id, name, world_loc, password_hash, auth_key=None, highscore=0, admin_q=False, items=None):
         self.id            = id
         self.username      = name
-        self.__auth_key    = Player.__generate_auth_key()
+        self.__auth_key    = auth_key if auth_key else Player.__generate_auth_key()
         self.password_hash = password_hash
         self.uuid          = uuid.uuid4
         self.admin_q       = admin_q
@@ -14,14 +15,14 @@ class Player:
         self.world         = world
         self.world_loc     = world_loc  # tuple of coordinates in world (x, y)
         self.max_weight    = 100
-        self.high_score    = highscore
+        self.highscore     = highscore
         # Inventory { key: Item.id, value: Item }
-        self.items         = items if items is not None else {}
+        self.items         = Player.create_items(items) if items else {}
 
     @property
     def weight(self):
         total_weight = 0
-        for item in self.items:
+        for item in self.items.values():
             total_weight += item.weight
         return total_weight
 
@@ -48,6 +49,9 @@ class Player:
             auth_key_list.append(random.choice(digits))
         return "".join(auth_key_list)
 
+    def create_items(items):
+        return {i.id: db_to_class(i) for i in items}
+
     def travel(self, direction, show_rooms=False):
         next_room = self.current_room.get_room_in_direction(direction)
         if next_room is not None:
@@ -56,3 +60,13 @@ class Player:
         else:
             print("You cannot move in that direction.")
             return False
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'world_loc': self.world_loc,
+            'weight': self.weight,
+            'highscore': self.highscore,
+            'items': [item.serialize() for item in self.items.values()]
+        }

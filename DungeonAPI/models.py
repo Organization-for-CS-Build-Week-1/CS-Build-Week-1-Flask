@@ -39,39 +39,43 @@ class Users(DB.Model):
 
     """Player data"""
     id            = DB.Column(DB.Integer, primary_key=True)
-    user_name     = DB.Column(DB.Text, nullable=False)
+    username      = DB.Column(DB.Text, nullable=False)
     password_hash = DB.Column(DB.LargeBinary, nullable=False)
     admin_q       = DB.Column(DB.Boolean, nullable=False)
     x             = DB.Column(DB.Integer, nullable=True)
     y             = DB.Column(DB.Integer, nullable=True)
+    highscore     = DB.Column(DB.Integer, nullable=False, default=0)
     items         = DB.relationship('Items', backref="player", lazy=True)
 
-    def __init__(self, user_name, password_hash, admin_q, x, y, items=None):
-        self.user_name     = user_name
+    def __init__(self, username, password_hash, admin_q, x, y, items=None, highscore=0):
+        self.username      = username
         self.password_hash = password_hash
         self.admin_q       = admin_q
         self.x             = x
         self.y             = y
+        self.highscore     = highscore
         self.items         = items if items is not None else []
 
     def serialize(self):
         return {
             'id': self.id,
-            'user_name': self.user_name,
+            'username': self.username,
             'admin_q': self.admin_q,
             'x': self.x,
             'y': self.y,
+            'highscore': self.highscore,
             'items': [item.serialize() for item in self.items]
         }
 
     def __repr__(self):
         output = {
             'id': self.id,
-            'user_name': self.user_name,
-            'auth_key': self.auth_key,
+            'password_hash': self.password_hash,
+            'username': self.username,
             'admin_q': self.admin_q,
             'x': self.x,
             'y': self.y,
+            'highscore': self.highscore,
             'items': self.items
         }
         return str(output)
