@@ -102,8 +102,6 @@ class Gem(Item):
             self.score  = score
 
         super().__init__("Gem", "High score, high weight. Covered by a rock.", id, self.weight, self.score)
-        # Whether the gem is trapped in a rock. Always initialized True
-        self.covered = True
 
 
 class Hammer(Item):
