@@ -19,6 +19,7 @@ class Room:
             "description": self.description,
             "world_loc": self.world_loc,
             "items": self.items,
+            "direction": self.directions
         }
 
     def __repr__(self):
@@ -31,6 +32,14 @@ class Room:
             f"\t\titems: {self.items},\n"
             f"\t}}\n"
         )
+
+    @property
+    def directions(self):
+        dir_list = []
+        for d in "nesw":
+            if self.get_room_in_direction(d) is not None:
+                dir_list.append(d)
+        return dir_list
 
     def get_room_in_direction(self, direction):
         if direction == 'n':
