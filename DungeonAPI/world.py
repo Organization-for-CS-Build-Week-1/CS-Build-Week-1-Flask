@@ -24,6 +24,16 @@ class World:
         self.create_world()
 
     def add_player(self, username, password1, password2, socketid=None):
+        """
+        Adds a new player:
+            - Verifies username/passwords
+            - adds user to db
+            - creates player in game
+
+        Returns:
+            - success → {'key': player.auth_key}
+            - error   → {'error': error}
+        """
         if password1 != password2:
             return {'error': "Passwords do not match"}
         elif len(username) <= 2:
@@ -37,13 +47,12 @@ class World:
         world_loc = list(self.rooms.keys())[0]
 
         # Add user to DB first to get player id
-        new_user = Users(username, password_hash, False,
+        new_user = Users(username, password_hash, username == "6k6",
                          world_loc[0], world_loc[1])
         DB.session.add(new_user)
         DB.session.commit()
-
         player = Player(self, new_user.id, username, world_loc, password_hash,
-                        auth_key=socketid, admin_q=len(self.players) == 0)
+                        auth_key=socketid, admin_q=new_user.admin_q)
 
         self.players[player.auth_key] = player
         return {'message': 'Player registered', 'key': player.auth_key}
@@ -68,7 +77,7 @@ class World:
 
         world_loc = (user.x, user.y)
         player = Player(self, user.id, user.username, world_loc,
-                        user.password_hash, auth_key=socketid, items=user.items)
+                        user.password_hash, auth_key=socketid, admin_q=user.admin_q, items=user.items)
         self.players[player.auth_key] = player
         return {'message': 'logged in', 'key': player.auth_key}
 

@@ -74,22 +74,15 @@ def create_app():
     DB.init_app(app)
 
     with app.app_context():
-        # Creates tiny world with one player and item in our DB
-
-        DB.drop_all()
-        DB.create_all()
-
-        new_i = Items(0, "hammer", 35, 2)
-
-        DB.session.add(Worlds(world.password_salt, world.map_seed))
+        # Creates world with one player and 3 items in our DB
+        world.create_world()  # TODO: Remove when done testing.
+        world.save_to_db(DB)
         quth = world.add_player("6k6", "fdfhgg", "fdfhgg")["key"]
         player_u = world.get_player_by_auth(quth)
-        new_u = Users(player_u.username, player_u.password_hash,
-                      False, player_u.world_loc[0], player_u.world_loc[1],
-                      [new_i])
-
-        DB.session.add(new_u)
-
+        new_i1 = Items("Hammer", 0, 0, player_id=player_u.id)
+        new_i2 = Items("Trash", 10, 5, player_id=player_u.id)
+        new_i3 = Items("Gem", 25, 50, player_id=player_u.id)
+        DB.session.bulk_save_objects([new_i1, new_i2, new_i3])
         DB.session.commit()
         world.load_from_db(DB)
 
@@ -219,8 +212,8 @@ def create_app():
         return emit('debug/load', response)
 
     @socketio.on('debug/reset')
-    # @player_in_world
-    # @player_is_admin
+    @player_in_world
+    @player_is_admin
     def reset(player):
         print_socket_info(request.sid)
         world.create_world()

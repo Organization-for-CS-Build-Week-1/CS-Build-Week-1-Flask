@@ -4,3 +4,4 @@ tmp
 .vscode/
 *.sqlite3
 latest.dump
+__pycache__/
