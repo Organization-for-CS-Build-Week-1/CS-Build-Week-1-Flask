@@ -3,10 +3,10 @@ import uuid
 
 
 class Player:
-    def __init__(self, world, id, name, world_loc, password_hash, highscore=0, admin_q=False, items=None):
+    def __init__(self, world, id, name, world_loc, password_hash, auth_key=None, highscore=0, admin_q=False, items=None):
         self.id            = id
         self.username      = name
-        self.__auth_key    = Player.__generate_auth_key()
+        self.__auth_key    = auth_key if auth_key else Player.__generate_auth_key()
         self.password_hash = password_hash
         self.uuid          = uuid.uuid4
         self.admin_q       = admin_q
@@ -14,9 +14,9 @@ class Player:
         self.world         = world
         self.world_loc     = world_loc  # tuple of coordinates in world (x, y)
         self.max_weight    = 100
-        self.high_score    = highscore
+        self.highscore    = highscore
         # Inventory { key: Item.id, value: Item }
-        self.items         = items if items is not None else {}
+        self.items         = items if items else {}
 
     @property
     def weight(self):
@@ -56,3 +56,13 @@ class Player:
         else:
             print("You cannot move in that direction.")
             return False
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'world_loc': list(self.world_loc),
+            'weight': self.weight,
+            'highscore': self.highscore,
+            'items': self.items
+        }
