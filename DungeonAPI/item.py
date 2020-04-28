@@ -55,10 +55,10 @@ class Trash(Item):
 
     def __init__(self, id, weight=None, score=None):
         if weight == None and score == None:
-            self.weight = randint(10, 30)
+            self.weight = randint(1, 3)
             self.score  = randint(1, 10) * 100
         elif weight == None:
-            self.weight = randint(10, 30)
+            self.weight = randint(1, 3)
         elif score == None:
             self.score  = randint(1, 10) * 100
         else:
@@ -74,10 +74,10 @@ class Stick(Item):
 
     def __init__(self, id, weight=None, score=None):
         if weight == None and score == None:
-            self.weight = randint(30, 70)
+            self.weight = randint(3, 7)
             self.score  = randint(10, 25) * 100
         elif weight == None:
-            self.weight = randint(30, 70)
+            self.weight = randint(3, 7)
         elif score == None:
             self.score  = randint(10, 25) * 100
         else:
@@ -93,10 +93,10 @@ class Gem(Item):
 
     def __init__(self, id, weight=None, score=None):
         if weight == None and score == None:
-            self.weight = randint(50, 100)
+            self.weight = randint(5, 10)
             self.score  = randint(50, 100) * 100
         elif weight == None:
-            self.weight = randint(10, 100)
+            self.weight = randint(5, 10)
         elif score == None:
             self.score  = randint(50, 100) * 100
         else:
@@ -111,10 +111,10 @@ class Hammer(Item):
 
     def __init__(self, id, weight=None, score=None):
         if weight == None and score == None:
-            self.weight = randint(50, 100)
+            self.weight = randint(5, 10)
             self.score  = randint(25, 50) * 100
         elif weight == None:
-            self.weight = randint(50, 100)
+            self.weight = randint(5, 10)
         elif score == None:
             self.score  = randint(25, 50) * 100
         else:
