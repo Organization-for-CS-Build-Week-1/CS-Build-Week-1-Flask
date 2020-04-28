@@ -8,7 +8,7 @@ places = [
     "barbecue pit",
     "bird bath",
     "pond",
-    "herb garden",
+    "exotic herb garden",
     "formal garden",
     "horse stable",
     "trash heap",
