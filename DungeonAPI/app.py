@@ -11,6 +11,7 @@ from decouple import config
 from .room import Room
 from .player import Player
 from .world import World
+from .combat import Combat
 from .blueprints import items_blueprint, users_blueprint, rooms_blueprint, worlds_blueprint
 
 from .models import DB, Users, Items, Worlds, Rooms
@@ -332,6 +333,61 @@ def create_app():
                 'error': 'You don\'t have this item'
             }
             emit('dropError', response)
+
+    @socketio.on('combat')
+    def combat(data, *_, **__):
+        print_socket_info(request.sid, data)
+
+        if not data:
+            response = {'error': 'Please provide a two usernames and a room for combat.'}
+            return emit('combatError', response) 
+        
+        player1 = world.get_player_by_username(data.get('username1'))
+        if player1 is None:
+            response = {'error': "First username does not exist."}
+            return emit('combatError', response) 
+        
+        player2 = world.get_player_by_username(data.get('username2'))
+        if player2 is None:
+            response = {'error': "Second username does not exist."}
+            return emit('combatError', response) 
+
+        if player1.current_room is not player2.current_room:
+            response = {'error': "Provided players are not in the same room."}
+            return emit('combatError', response) 
+
+        if player1.in_combat:
+            response = {'error': "First player is already in combat."}
+            return emit('combatError', response) 
+
+        if player2.in_combat:
+            response = {'error': "Second player is already in combat."}
+            return emit('combatError', response)
+
+        new_combat = Combat(player1, player2, player1.current_room)
+        world.combats[new_combat.id] = new_combat
+
+        full_items = [ i.serialize() for i in new_combat.full_items.values() ]
+
+        response = {'message': f"Combat started between {player1.username} and {player2.username}.",
+                    'full_items': full_items,
+                    'combat_id': new_combat.id}
+        return emit('combat', response) 
+
+    @socketio.on('end_combat')
+    def end_combat(data, *_, **__):
+        print_socket_info(request.sid, data)
+
+        combat_id = data.get('combat_id')
+        combat = world.combats[combat_id]
+        del world.combats[combat_id]
+
+        player1_item_ids = data.get('player1_item_ids')
+        player2_item_ids = data.get('player2_item_ids')
+
+        response = combat.determine_winner(player1_item_ids, player2_item_ids)
+
+        return emit('combat_end', response) 
 
     @socketio.on('chat')
     @player_in_world
