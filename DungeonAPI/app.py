@@ -269,8 +269,6 @@ def create_app():
             leave_room(previous_room)
             join_room(str(player.world_loc))
             chatmessage = f"{player.username} entered the room"
-            print(player.current_room.items)
-            print(player.current_room.serialize())
             return room_update(player, chatmessage)
         else:
             response = {
