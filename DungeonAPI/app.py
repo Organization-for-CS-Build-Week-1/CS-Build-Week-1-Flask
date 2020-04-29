@@ -18,7 +18,7 @@ from .models import DB, Users, Items, Worlds
 
 def create_app():
 
-    def room_update(player, chatmessage):
+    def room_update(player, chatmessage, chat_only=False):
         """
         Emits info via socket to all players
         in the same room as the given player.
@@ -29,7 +29,7 @@ def create_app():
             chatmessage → message for FE chat
         """
         response = {
-            'room': player.current_room.serialize(),
+            'room': None if chat_only else player.current_room.serialize(),
             'chat': chatmessage
         }
         return emit("roomupdate", response, room=str(player.world_loc))
@@ -148,7 +148,7 @@ def create_app():
 
     @app.route('/socketoptions')
     def socket_options():
-        return jsonify(["register", "login", "test", "init", "move", "take", "drop"]), 200
+        return jsonify(["register", "login", "test", "init", "move", "take", "drop", "chat"]), 200
 
     @app.route('/api/check')
     def check():
@@ -171,7 +171,8 @@ def create_app():
         required = ['username', 'password1', 'password2']
 
         if not data or not all(k in data for k in required):
-            response = {'error': 'Please provide: username, password1, password2'}
+            response = {
+                'error': 'Please provide: username, password1, password2'}
             return emit('registerError', response)
 
         username = data.get('username')
@@ -318,6 +319,17 @@ def create_app():
                 'error': 'You don\'t have this item'
             }
             emit('dropError', response)
+
+    @socketio.on('chat')
+    @player_in_world
+    def inventory(player, message=None, *_, **__):
+        print_socket_info(request.sid, f"CHAT: {message}")
+
+        if message is None or not isinstance(message, str):
+            return emit("chatError", {
+                "error": "You must send a message"})
+
+        room_update(player, f"{player.username}: {message}", chat_only=True)
 
     @socketio.on('inventory')
     def inventory():
