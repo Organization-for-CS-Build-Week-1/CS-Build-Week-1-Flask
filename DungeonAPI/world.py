@@ -230,6 +230,7 @@ class World:
         """
         db_worlds = Worlds.query.all()
         if db_worlds is None or len(db_worlds) == 0:
+            DB.session.commit()
             return
         self.password_salt = db_worlds[0].password_salt
         self.map_seed = db_worlds[0].map_seed
@@ -246,3 +247,4 @@ class World:
             self.rooms[room.world_loc] = room
 
         self.loaded = True
+        DB.session.commit()
