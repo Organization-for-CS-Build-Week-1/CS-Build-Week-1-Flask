@@ -1,5 +1,6 @@
 import random
 import uuid
+from .item import Trash
 
 
 class Player:
@@ -76,7 +77,8 @@ class Player:
             return False
         item = self.items.pop(item_id)
         self.current_room.add_item(item)
-        return f"{self.username} dropped the {item.name}"
+        article = "some" if isinstance(item, Trash) else "a"
+        return f"{self.username} dropped {article} {item.name}"
 
     def take_item(self, item_id):
         """
@@ -99,7 +101,8 @@ class Player:
         self.items[item.id] = item
         if self.score > self.highscore:
             self.highscore = self.score
-        return f"{self.username} took the {item.name}"
+        article = "some" if isinstance(item, Trash) else "a"
+        return f"{self.username} took {article} {item.name}"
 
     def serialize(self):
         return {
