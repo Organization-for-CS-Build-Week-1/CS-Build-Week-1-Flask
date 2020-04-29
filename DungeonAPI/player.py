@@ -62,7 +62,6 @@ class Player:
             self.world_loc = next_room.world_loc
             return True
         else:
-            print("You cannot move in that direction.")
             return False
 
     def drop_item(self, item_id):
@@ -101,6 +100,7 @@ class Player:
         self.items[item.id] = item
         if self.score > self.highscore:
             self.highscore = self.score
+            self.world.confirm_highscores(self)
         article = "some" if isinstance(item, Trash) else "a"
         return f"{self.username} took {article} {item.name}"
 
