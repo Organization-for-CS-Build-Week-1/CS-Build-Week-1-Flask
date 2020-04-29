@@ -243,9 +243,7 @@ def create_app():
         print_socket_info(request.sid)
 
         # Send map information
-        response = {
-            'map': player.world.get_map_info(),
-        }
+        response = player.world.get_map_info(),
         emit('mapinfo', response)
         emit('playerupdate', player.serialize())
         # Send current room information
