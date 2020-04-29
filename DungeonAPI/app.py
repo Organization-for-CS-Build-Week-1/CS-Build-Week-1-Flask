@@ -13,7 +13,7 @@ from .player import Player
 from .world import World
 from .blueprints import items_blueprint, users_blueprint, rooms_blueprint, worlds_blueprint
 
-from .models import DB, Users, Items, Worlds
+from .models import DB, Users, Items, Worlds, Rooms
 
 
 def create_app():
@@ -90,13 +90,26 @@ def create_app():
     DB.init_app(app)
 
     with app.app_context():
-        # Loads our world
+        # Create Tables if they don't already exist
+        Worlds.__table__.create(DB.engine, checkfirst=True)
+        Rooms.__table__.create(DB.engine, checkfirst=True)
+        Items.__table__.create(DB.engine, checkfirst=True)
+        Users.__table__.create(DB.engine, checkfirst=True)
+        # Loads our world if it exists
         world.load_from_db(DB)
-
+        
         if len(world.rooms) == 0:
             # If the world is empty, creates one
-            world.create_world()  # TODO: Remove when done testing.
+            world.create_world()
             world.save_to_db(DB)
+        if len(Users.query.all()) == 0:
+            # If we have no users, start with our admin user
+            username = config("ADMIN_USERNAME")
+            password = config("ADMIN_PASSWORD")
+            quth = world.add_player(username, password, password)
+            if 'key' in quth:
+                player = world.get_player_by_auth(quth['key'])
+                world.save_player_to_db(player)
 
 
     @app.after_request
