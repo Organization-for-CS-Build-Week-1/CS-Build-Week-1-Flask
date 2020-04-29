@@ -374,20 +374,48 @@ def create_app():
                     'combat_id': new_combat.id}
         return emit('combat', response) 
 
-    @socketio.on('end_combat')
-    def end_combat(data, *_, **__):
+    @socketio.on('update_combat')
+    @player_in_world
+    def update_combat(player, data, *_, **__):
         print_socket_info(request.sid, data)
 
         combat_id = data.get('combat_id')
-        combat = world.combats[combat_id]
-        del world.combats[combat_id]
+        combat = world.combats.get(combat_id, None)
 
-        player1_item_ids = data.get('player1_item_ids')
-        player2_item_ids = data.get('player2_item_ids')
+        if combat is None:
+            response = {"error":"Invalid combat ID."}
+            return emit('combat_error', response) 
 
-        response = combat.determine_winner(player1_item_ids, player2_item_ids)
+        combat_player = { combat.player1.username:1, combat.player2.username:2 }.get(player.username, None)
 
-        return emit('combat_end', response) 
+        if combat_player is None:
+            response = {"error":f"{player.username} is not in that combat."}
+            return emit('combat_error', response) 
+        
+        items = { combat.full_items.get(i, None) for i in data.get('player_item_ids') }
+        
+        if None in items:
+            response = {"error":"Item ID not found in that combat."}
+            return emit('combat_error', response) 
+
+        total_weight = sum([ i.weight for i in items ])
+
+        if total_weight > 100:
+            response = {"error":"Player tried using items with too much total weight."}
+            return emit('combat_error', response) 
+
+        if combat_player == 1:
+            combat.player1_set = items
+        elif combat_player == 2:
+            combat.player2_set = items
+
+        response = combat.check_status()
+
+        if "outcome" in response:
+            del world.combats[combat_id]
+            return emit('combat_end', response)
+        else:
+            return emit('combat', response)
 
     @socketio.on('chat')
     @player_in_world
