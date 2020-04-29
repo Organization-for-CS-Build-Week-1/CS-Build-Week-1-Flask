@@ -155,7 +155,7 @@ class Map:
             room.description += ' '.join(desc_strings)
 
     def generate_rooms(self, world=None):
-        room_count = 0
+        room_count = 0 
         for i in range(self.size):
             for j in range(self.size):
                 if self.grid[i][j] == 1:
@@ -194,7 +194,7 @@ class Map:
                 else:
                     item_str = "\x1b[1;30m0"
                 row_str += item_str
-
+            print(row_str)
 
 class Walker:
     def __init__(self, map, mode, rand_factor, y=0, x=0):
