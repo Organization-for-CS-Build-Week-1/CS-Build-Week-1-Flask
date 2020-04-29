@@ -1,6 +1,7 @@
 import random
 import math
 import bcrypt
+from flask_socketio import emit
 
 from .room import Room
 from .player import Player
@@ -19,6 +20,7 @@ class World:
         self.password_salt = bcrypt.gensalt()
         self.rooms         = {}
         self.players       = {}
+        self.highscores    = [None, None, None]
         self.loaded        = False
         self.map_seed      = map_seed
         self.create_world()
@@ -123,6 +125,45 @@ class World:
                 DB.session.add(item)
         DB.session.commit()  # Save DB changes
         self.players.pop(player.auth_key)
+
+    def confirm_highscores(self, player):
+        """
+        Checks the player's highscore with the top three.
+
+        If the player is in the top three, update the values
+        and send to all players.
+
+        emits "highscoreupdate"
+        """
+        sendScores = False
+        if player in self.highscores:
+            # Even if the player doesn't move a place,
+            # their score change still needs to be sent
+            sendScores = True
+            for i in range(2, 0, -1):
+                if self.highscores[i - 1] is None or (self.highscores[i] and self.highscores[i].highscore > self.highscores[i - 1].highscore):
+                    # If the compare value is None, or
+                    # our current highscore is greater than compared highscore
+                    # swap.
+                    temp = self.highscores[i]
+                    self.highscores[i] = self.highscores[i - 1]
+                    self.highscores[i - 1] = temp
+        else:
+            for i in range(2):
+                if self.highscores[i] is None or player.highscore > self.highscores[i].highscore:
+                    # If you find a highscore lower than the player, or
+                    # the compared spot is None, stick the player in there
+                    sendScores = True
+                    temp = player
+                    player = self.highscores[i]
+                    self.highscores[i] = temp
+        if sendScores:
+            send_highscores = [None, None, None]
+            for i in range(len(self.highscores)):
+                p = self.highscores[i]
+                if isinstance(p, Player):
+                    send_highscores[i] = f"{p.username} {p.highscore}"
+            emit("highscoreupdate", send_highscores, broadcast=True)
 
     def get_map_info(self):
         """
