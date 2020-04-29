@@ -89,17 +89,14 @@ def create_app():
     DB.init_app(app)
 
     with app.app_context():
-        # Creates world with one player and 3 items in our DB
-        world.create_world()  # TODO: Remove when done testing.
-        world.save_to_db(DB)
-        quth = world.add_player("6k6", "fdfhgg", "fdfhgg")["key"]
-        player_u = world.get_player_by_auth(quth)
-        new_i1 = Items("Hammer", 0, 0, player_id=player_u.id)
-        new_i2 = Items("Trash", 10, 5, player_id=player_u.id)
-        new_i3 = Items("Gem", 25, 50, player_id=player_u.id)
-        DB.session.bulk_save_objects([new_i1, new_i2, new_i3])
-        DB.session.commit()
+        # Loads our world
         world.load_from_db(DB)
+
+        if len(world.rooms) == 0:
+            # If the world is empty, creates one
+            world.create_world()  # TODO: Remove when done testing.
+            world.save_to_db(DB)
+
 
     @app.after_request
     def after_request(response):
@@ -135,6 +132,9 @@ def create_app():
     @socketio.on("disconnect")
     def disconnect():
         print_socket_info(request.sid, "Left the server.")
+        player = world.get_player_by_auth(request.sid)
+        if player is not None:
+            world.save_player_to_db(player)
 
     @socketio.on("test")
     def test(data):
