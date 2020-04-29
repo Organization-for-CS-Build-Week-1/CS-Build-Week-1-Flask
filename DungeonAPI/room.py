@@ -1,4 +1,5 @@
-from .item import Item
+import random
+from .item import Item, Trash, Stick, Gem, Hammer
 
 
 class Room:
@@ -105,6 +106,16 @@ class Store(Room):
         name = "Ant Store"
         description = "A fabulous store where you can buy all things ant!"
         super().__init__(world, name, description, world_loc, loc_name, id, items)
+        self.set_inventory()
+
+    def set_inventory(self):
+        potential_inventory = [
+            [Trash(random.randint(0, 10**8)) for _ in range(15)],
+            [Stick(random.randint(0, 10**8)) for _ in range(15)],
+            [Gem(random.randint(0, 10**8)) for _ in range(15)],
+            [Hammer(random.randint(0, 10**8)) for _ in range(15)]
+        ]
+        self.items = { item.id:item for item in random.choices(potential_inventory, k=1)[0]}
 
     def sell_item(self, item_id, barter_value):
         item = self.items.get(item_id)
@@ -112,6 +123,7 @@ class Store(Room):
             return None
         if item.score > barter_value:
             return False
-        self.remove_item(item_id)
+        else:
+            self.items.remove_item(item_id)
         return item
 
