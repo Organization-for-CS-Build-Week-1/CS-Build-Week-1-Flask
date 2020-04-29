@@ -90,8 +90,6 @@ def create_app():
 
     with app.app_context():
         # Creates world with one player and 3 items in our DB
-        world.create_world()  # TODO: Remove when done testing.
-        world.save_to_db(DB)
         quth = world.add_player("6k6", "fdfhgg", "fdfhgg")["key"]
         player_u = world.get_player_by_auth(quth)
         new_i1 = Items("Hammer", 0, 0, player_id=player_u.id)
@@ -152,7 +150,8 @@ def create_app():
     @app.route('/api/check')
     def check():
         # Check if server is running and load world.
-        world.create_world()  # TODO: Remove when done testing.
+        value = request.get_json()
+        world.create_world(value.get('seed'))
         world.save_to_db(DB)
         if not world.loaded:
             try:
