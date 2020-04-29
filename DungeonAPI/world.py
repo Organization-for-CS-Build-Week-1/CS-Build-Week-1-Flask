@@ -123,23 +123,23 @@ class World:
             new_room = Rooms(r.name, r.description,
                              r.world_loc[0], r.world_loc[1])
             DB.session.add(new_room)
+            DB.session.commit()
 
             for i in r.items.values():
-                new_item = Items(i.name, i.weight, i.score, room_id=r.id)
+                new_item = Items(i.name, i.weight, i.score, room_id=new_room.id)
                 items.append(new_item)
 
-        DB.session.commit()
 
         for p in self.players.values():
             new_user = Users(p.username, p.password_hash,
                              p.admin_q, p.world_loc[0], p.world_loc[1], highscore=p.highscore)
             DB.session.add(new_user)
+            DB.session.commit()
 
             for i in p.items.values():
-                new_item = Items(i.name, i.weight, i.score, player_id=p.id)
+                new_item = Items(i.name, i.weight, i.score, player_id=new_user.id)
                 items.append(new_item)
 
-        DB.session.commit()
 
         DB.session.bulk_save_objects(items)
         DB.session.commit()
