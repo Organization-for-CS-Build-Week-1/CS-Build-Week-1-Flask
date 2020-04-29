@@ -18,18 +18,19 @@ from .models import DB, Users, Items, Worlds
 
 def create_app():
 
-    def room_update(player):
+    def room_update(player, chatmessage):
         """
         Emits info via socket to all players
         in the same room as the given player.
 
         Used for init/move/take/drop,
         to update all players in room simulatneously.
-            Player → Player who just performed action
+            Player      → Player who just performed action
+            chatmessage → message for FE chat
         """
         response = {
             'room': player.current_room.serialize(),
-            'player': player.serialize(),
+            'chat': chatmessage
         }
         return emit("roomupdate", response, room=str(player.world_loc))
 
@@ -244,12 +245,13 @@ def create_app():
         # Send map information
         response = {
             'map': player.world.get_map_info(),
-        } 
+        }
         emit('mapinfo', response)
-
+        emit('playerupdate', player.serialize())
         # Send current room information
         join_room(str(player.world_loc))
-        return room_update(player)
+        chatmessage = f"{player.username} entered the room"
+        return room_update(player, chatmessage)
 
     @socketio.on('move')
     @player_in_world
@@ -266,7 +268,10 @@ def create_app():
             # If the player travels successfully
             leave_room(previous_room)
             join_room(str(player.world_loc))
-            return room_update(player)
+            chatmessage = f"{player.username} entered the room"
+            print(player.current_room.items)
+            print(player.current_room.serialize())
+            return room_update(player, chatmessage)
         else:
             response = {
                 'error': "You cannot move in that direction.",
@@ -278,10 +283,11 @@ def create_app():
     def take_item(player, item_id):
         print_socket_info(request.sid, f"take {item_id}")
 
-        success = player.take_item(item_id)
-        if success:
-            return room_update(player)
-        elif success is None:
+        chatmessage = player.take_item(item_id)
+        if chatmessage:
+            emit("playerupdate", player.serialize())
+            return room_update(player, chatmessage)
+        elif chatmessage is None:
             response = {
                 'error': 'This item is not in the room'
             }
@@ -292,14 +298,15 @@ def create_app():
             }
             return emit('full', response)
 
-
     @socketio.on('drop')
     @player_in_world
     def drop_item(player, item_id):
         print_socket_info(request.sid, f"drop {item_id}")
 
-        if player.drop_item(item_id):
-            return room_update(player)
+        chatmessage = player.drop_item(item_id)
+        if chatmessage:
+            emit("playerupdate", player.serialize())
+            return room_update(player, chatmessage)
         else:
             response = {
                 'error': 'You don\'t have this item'
@@ -310,25 +317,25 @@ def create_app():
     def inventory():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
-        return jsonify(response), 400
+        return emit('error', response)
 
     @socketio.on('buy')
     def buy_item():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
-        return jsonify(response), 400
+        return emit('error', response)
 
     @socketio.on('sell')
     def sell_item():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
-        return jsonify(response), 400
+        return emit('error', response)
 
     @socketio.on('rooms')
     def rooms():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
-        return jsonify(response), 400
+        return emit('error', response)
 
     return app, socketio
 
