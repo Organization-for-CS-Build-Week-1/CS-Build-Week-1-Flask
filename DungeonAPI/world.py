@@ -191,13 +191,13 @@ class World:
 
         User data is preserved.
         """
+        Items.__table__.drop(DB.engine, checkfirst=True)
         Worlds.__table__.drop(DB.engine, checkfirst=True)
         Rooms.__table__.drop(DB.engine, checkfirst=True)
-        Items.__table__.drop(DB.engine, checkfirst=True)
         Worlds.__table__.create(DB.engine)
         Rooms.__table__.create(DB.engine)
-        Items.__table__.create(DB.engine)
         Users.__table__.create(DB.engine, checkfirst=True)
+        Items.__table__.create(DB.engine)
 
         new_world = Worlds(self.password_salt, self.map_seed)
         DB.session.add(new_world)
