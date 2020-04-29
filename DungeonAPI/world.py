@@ -13,7 +13,7 @@ from .models import *
 
 class World:
 
-    def __init__(self, map_seed=None):
+    def __init__(self, map_seed=16358):
         # rooms   { key: Room.world_loc,  value: Room }
         # players { key: Player.auth_key, value: Player }
 
@@ -23,7 +23,6 @@ class World:
         self.highscores    = [None, None, None]
         self.loaded        = False
         self.map_seed      = map_seed
-        self.create_world()
 
     def add_player(self, username, password1, password2, socketid=None):
         """
@@ -224,13 +223,16 @@ class World:
     def load_from_db(self, DB):
         """
         Loads all Rooms and any associated items from the database
-        into the game.
+        into the game, if they exist.
 
         This function does NOT load any players. Use `add_player()`
         or `load_player_from_db()` to load players into the game.
         """
-        self.password_salt = Worlds.query.all()[0].password_salt
-        self.map_seed = Worlds.query.all()[0].map_seed
+        db_worlds = Worlds.query.all()
+        if db_worlds is None or len(db_worlds) == 0:
+            return
+        self.password_salt = db_worlds[0].password_salt
+        self.map_seed = db_worlds[0].map_seed
 
         self.rooms = {}
         self.players = {}
