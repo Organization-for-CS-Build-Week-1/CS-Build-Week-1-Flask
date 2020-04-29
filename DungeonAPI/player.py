@@ -19,6 +19,8 @@ class Player:
         # Inventory { key: Item.id, value: Item }
         self.items         = items if items is not None else {}
 
+        self.in_combat = False
+
     @property
     def weight(self):
         total_weight = 0

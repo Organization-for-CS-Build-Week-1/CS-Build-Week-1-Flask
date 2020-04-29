@@ -23,6 +23,7 @@ class World:
         self.highscores    = [None, None, None]
         self.loaded        = False
         self.map_seed      = map_seed
+        self.combats       = {}
 
     def add_player(self, username, password1, password2, socketid=None):
         """
