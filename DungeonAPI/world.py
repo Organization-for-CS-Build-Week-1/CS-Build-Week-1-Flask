@@ -126,7 +126,7 @@ class World:
             DB.session.commit()
 
             for i in r.items.values():
-                new_item = Items(i.name, i.weight, i.score, room_id=r.id)
+                new_item = Items(i.name, i.weight, i.score, room_id=new_room.id)
                 items.append(new_item)
 
 
@@ -137,7 +137,7 @@ class World:
             DB.session.commit()
 
             for i in p.items.values():
-                new_item = Items(i.name, i.weight, i.score, player_id=p.id)
+                new_item = Items(i.name, i.weight, i.score, player_id=new_user.id)
                 items.append(new_item)
 
 
