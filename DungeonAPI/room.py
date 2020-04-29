@@ -1,4 +1,5 @@
 import random
+from datetime import datetime, timedelta
 from .item import Item, Trash, Stick, Gem, Hammer
 
 
@@ -106,6 +107,7 @@ class Store(Room):
         name = "Ant Store"
         description = "A fabulous store where you can buy all things ant!"
         super().__init__(world, name, description, world_loc, loc_name, id, items)
+        self.last_reset = datetime.now()
         self.set_inventory()
 
     def set_inventory(self):
@@ -116,8 +118,13 @@ class Store(Room):
             [Hammer(random.randint(0, 10**8)) for _ in range(15)]
         ]
         self.items = { item.id:item for item in random.choices(potential_inventory, k=1)[0]}
+        print(f"\n{self.world_loc}\n")
+        print(self.items)
 
-    def sell_item(self, item_id, barter_value):
+    def barter_item(self, item_id, barter_value):
+        now = datetime.now()
+        if now > self.last_reset + timedelta(seconds=10):
+            self.set_inventory()
         item = self.items.get(item_id)
         if not item:
             return None
