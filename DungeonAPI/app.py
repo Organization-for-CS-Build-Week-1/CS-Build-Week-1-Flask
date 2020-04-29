@@ -93,8 +93,8 @@ def create_app():
         # Create Tables if they don't already exist
         Worlds.__table__.create(DB.engine, checkfirst=True)
         Rooms.__table__.create(DB.engine, checkfirst=True)
-        Items.__table__.create(DB.engine, checkfirst=True)
         Users.__table__.create(DB.engine, checkfirst=True)
+        Items.__table__.create(DB.engine, checkfirst=True)
         # Loads our world if it exists
         world.load_from_db(DB)
         
