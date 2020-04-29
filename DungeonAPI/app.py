@@ -18,18 +18,19 @@ from .models import DB, Users, Items, Worlds
 
 def create_app():
 
-    def room_update(player):
+    def room_update(player, chatmessage, chat_only=False):
         """
         Emits info via socket to all players
         in the same room as the given player.
 
         Used for init/move/take/drop,
         to update all players in room simulatneously.
-            Player → Player who just performed action
+            Player      → Player who just performed action
+            chatmessage → message for FE chat
         """
         response = {
-            'room': player.current_room.serialize(),
-            'player': player.serialize(),
+            'room': None if chat_only else player.current_room.serialize(),
+            'chat': chatmessage
         }
         return emit("roomupdate", response, room=str(player.world_loc))
 
@@ -147,7 +148,7 @@ def create_app():
 
     @app.route('/socketoptions')
     def socket_options():
-        return jsonify(["register", "login", "test", "init", "move", "take", "drop"]), 200
+        return jsonify(["register", "login", "test", "init", "move", "take", "drop", "chat"]), 200
 
     @app.route('/api/check')
     def check():
@@ -165,13 +166,13 @@ def create_app():
         return jsonify({'message': 'World is up and running'}), 200
 
     @socketio.on('register')
-    def register(data):
+    def register(data=None, *_, **__):
         print_socket_info(request.sid, data)
         required = ['username', 'password1', 'password2']
 
-        if not all(k in data for k in required):
-            response = {'error': "Missing Values",
-                        'required': 'username, password1, password2'}
+        if not data or not all(k in data for k in required):
+            response = {
+                'error': 'Please provide: username, password1, password2'}
             return emit('registerError', response)
 
         username = data.get('username')
@@ -186,12 +187,15 @@ def create_app():
             return emit('register', response)
 
     @socketio.on('login')
-    def login(data):
+    def login(data=None, *_, **__):
         print_socket_info(request.sid, data)
 
-        response = world.load_player_from_db(data.get('username'),
-                                             data.get('password'),
-                                             request.sid)
+        if not data:
+            response = {'error': 'Please provide a username and password'}
+        else:
+            response = world.load_player_from_db(data.get('username'),
+                                                 data.get('password'),
+                                                 request.sid)
 
         if 'error' in response:
             return emit('loginError', response)
@@ -201,7 +205,7 @@ def create_app():
     @socketio.on('debug')
     @player_in_world
     @player_is_admin
-    def debug(player):
+    def debug(player, *_, **__):
         print_socket_info(request.sid)
         response = {'message': "Authority accepted."}
         return emit('debug', response)
@@ -209,7 +213,7 @@ def create_app():
     @socketio.on('debug/save')
     @player_in_world
     @player_is_admin
-    def save(player):
+    def save(player, *_, **__):
         print_socket_info(request.sid)
         world.save_to_db(DB)
 
@@ -219,7 +223,7 @@ def create_app():
     @socketio.on('debug/load')
     @player_in_world
     @player_is_admin
-    def load(player):
+    def load(player, *_, **__):
         print_socket_info(request.sid)
         world.load_from_db(DB)
 
@@ -229,7 +233,7 @@ def create_app():
     @socketio.on('debug/reset')
     @player_in_world
     @player_is_admin
-    def reset(player):
+    def reset(player, *_, **__):
         print_socket_info(request.sid)
         world.create_world()
 
@@ -238,25 +242,24 @@ def create_app():
 
     @socketio.on('init')
     @player_in_world
-    def init(player):
+    def init(player, *_, **__):
         print_socket_info(request.sid)
 
         # Send map information
-        response = {
-            'map': player.world.get_map_info(),
-        } 
+        response = player.world.get_map_info(),
         emit('mapinfo', response)
-
+        emit('playerupdate', player.serialize())
         # Send current room information
         join_room(str(player.world_loc))
-        return room_update(player)
+        chatmessage = f"{player.username} entered the room"
+        return room_update(player, chatmessage)
 
     @socketio.on('move')
     @player_in_world
-    def move(player, direction):
+    def move(player, direction=None, *_, **__):
         print_socket_info(request.sid, direction)
 
-        if direction is None:
+        if direction is None or not isinstance(direction, str) or direction not in "nsew":
             return emit("moveError", {
                 "error": "You must move a direction: 'n', 's', 'e', 'w'"})
 
@@ -266,7 +269,8 @@ def create_app():
             # If the player travels successfully
             leave_room(previous_room)
             join_room(str(player.world_loc))
-            return room_update(player)
+            chatmessage = f"{player.username} entered the room"
+            return room_update(player, chatmessage)
         else:
             response = {
                 'error': "You cannot move in that direction.",
@@ -275,13 +279,18 @@ def create_app():
 
     @socketio.on('take')
     @player_in_world
-    def take_item(player, item_id):
+    def take_item(player, item_id=None, *_, **__):
         print_socket_info(request.sid, f"take {item_id}")
 
-        success = player.take_item(item_id)
-        if success:
-            return room_update(player)
-        elif success is None:
+        if item_id is None or not isinstance(item_id, int):
+            return emit("takeError", {
+                "error": "You must provide a valid item_id integer"})
+
+        chatmessage = player.take_item(item_id)
+        if chatmessage:
+            emit("playerupdate", player.serialize())
+            return room_update(player, chatmessage)
+        elif chatmessage is None:
             response = {
                 'error': 'This item is not in the room'
             }
@@ -292,43 +301,59 @@ def create_app():
             }
             return emit('full', response)
 
-
     @socketio.on('drop')
     @player_in_world
-    def drop_item(player, item_id):
+    def drop_item(player, item_id=None, *_, **__):
         print_socket_info(request.sid, f"drop {item_id}")
 
-        if player.drop_item(item_id):
-            return room_update(player)
+        if item_id is None or not isinstance(item_id, int):
+            return emit("takeError", {
+                "error": "You must provide a valid item_id integer"})
+
+        chatmessage = player.drop_item(item_id)
+        if chatmessage:
+            emit("playerupdate", player.serialize())
+            return room_update(player, chatmessage)
         else:
             response = {
                 'error': 'You don\'t have this item'
             }
             emit('dropError', response)
 
+    @socketio.on('chat')
+    @player_in_world
+    def inventory(player, message=None, *_, **__):
+        print_socket_info(request.sid, f"CHAT: {message}")
+
+        if message is None or not isinstance(message, str):
+            return emit("chatError", {
+                "error": "You must send a message"})
+
+        room_update(player, f"{player.username}: {message}", chat_only=True)
+
     @socketio.on('inventory')
     def inventory():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
-        return jsonify(response), 400
+        return emit('error', response)
 
     @socketio.on('buy')
     def buy_item():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
-        return jsonify(response), 400
+        return emit('error', response)
 
     @socketio.on('sell')
     def sell_item():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
-        return jsonify(response), 400
+        return emit('error', response)
 
     @socketio.on('rooms')
     def rooms():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
-        return jsonify(response), 400
+        return emit('error', response)
 
     return app, socketio
 

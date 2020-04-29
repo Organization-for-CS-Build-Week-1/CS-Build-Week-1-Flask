@@ -73,7 +73,6 @@ class Room:
 
     def get_item_weight(self, item_id):
         item = self.items.get(item_id, None)
-        print(item.weight)
         if item is None:
             return None
         else:
