@@ -166,13 +166,12 @@ def create_app():
         return jsonify({'message': 'World is up and running'}), 200
 
     @socketio.on('register')
-    def register(data):
+    def register(data=None, *_, **__):
         print_socket_info(request.sid, data)
         required = ['username', 'password1', 'password2']
 
-        if not all(k in data for k in required):
-            response = {'error': "Missing Values",
-                        'required': 'username, password1, password2'}
+        if not data or not all(k in data for k in required):
+            response = {'error': 'Please provide: username, password1, password2'}
             return emit('registerError', response)
 
         username = data.get('username')
@@ -187,12 +186,15 @@ def create_app():
             return emit('register', response)
 
     @socketio.on('login')
-    def login(data):
+    def login(data=None, *_, **__):
         print_socket_info(request.sid, data)
 
-        response = world.load_player_from_db(data.get('username'),
-                                             data.get('password'),
-                                             request.sid)
+        if not data:
+            response = {'error': 'Please provide a username and password'}
+        else:
+            response = world.load_player_from_db(data.get('username'),
+                                                 data.get('password'),
+                                                 request.sid)
 
         if 'error' in response:
             return emit('loginError', response)
@@ -202,7 +204,7 @@ def create_app():
     @socketio.on('debug')
     @player_in_world
     @player_is_admin
-    def debug(player):
+    def debug(player, *_, **__):
         print_socket_info(request.sid)
         response = {'message': "Authority accepted."}
         return emit('debug', response)
@@ -210,7 +212,7 @@ def create_app():
     @socketio.on('debug/save')
     @player_in_world
     @player_is_admin
-    def save(player):
+    def save(player, *_, **__):
         print_socket_info(request.sid)
         world.save_to_db(DB)
 
@@ -220,7 +222,7 @@ def create_app():
     @socketio.on('debug/load')
     @player_in_world
     @player_is_admin
-    def load(player):
+    def load(player, *_, **__):
         print_socket_info(request.sid)
         world.load_from_db(DB)
 
@@ -230,7 +232,7 @@ def create_app():
     @socketio.on('debug/reset')
     @player_in_world
     @player_is_admin
-    def reset(player):
+    def reset(player, *_, **__):
         print_socket_info(request.sid)
         world.create_world()
 
@@ -239,7 +241,7 @@ def create_app():
 
     @socketio.on('init')
     @player_in_world
-    def init(player):
+    def init(player, *_, **__):
         print_socket_info(request.sid)
 
         # Send map information
@@ -253,10 +255,10 @@ def create_app():
 
     @socketio.on('move')
     @player_in_world
-    def move(player, direction):
+    def move(player, direction=None, *_, **__):
         print_socket_info(request.sid, direction)
 
-        if direction is None:
+        if direction is None or not isinstance(direction, str) or direction not in "nsew":
             return emit("moveError", {
                 "error": "You must move a direction: 'n', 's', 'e', 'w'"})
 
@@ -276,8 +278,12 @@ def create_app():
 
     @socketio.on('take')
     @player_in_world
-    def take_item(player, item_id):
+    def take_item(player, item_id=None, *_, **__):
         print_socket_info(request.sid, f"take {item_id}")
+
+        if item_id is None or not isinstance(item_id, int):
+            return emit("takeError", {
+                "error": "You must provide a valid item_id integer"})
 
         chatmessage = player.take_item(item_id)
         if chatmessage:
@@ -296,8 +302,12 @@ def create_app():
 
     @socketio.on('drop')
     @player_in_world
-    def drop_item(player, item_id):
+    def drop_item(player, item_id=None, *_, **__):
         print_socket_info(request.sid, f"drop {item_id}")
+
+        if item_id is None or not isinstance(item_id, int):
+            return emit("takeError", {
+                "error": "You must provide a valid item_id integer"})
 
         chatmessage = player.drop_item(item_id)
         if chatmessage:
