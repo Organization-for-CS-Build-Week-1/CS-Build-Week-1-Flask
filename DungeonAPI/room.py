@@ -107,7 +107,8 @@ class Store(Room):
         description = "A fabulous store where you can buy all things ant!"
         super().__init__(world, name, description, world_loc, loc_name, id, items)
         self.last_reset = datetime.now()
-        self.set_inventory()
+        if items is None:
+            self.set_inventory()
 
     def set_inventory(self):
         potential_inventory = [
@@ -120,15 +121,16 @@ class Store(Room):
 
     def barter_item(self, item_id, barter_value):
         now = datetime.now()
-        if now > self.last_reset + timedelta(seconds=10):
+        if now > self.last_reset + timedelta(minutes=10):
             self.set_inventory()
+        print(self.items)
         item = self.items.get(item_id)
         if not item:
             return None
-        if item.score > barter_value:
+        elif item.score > barter_value:
             return False
-        else:
-            self.items.remove_item(item_id)
+        # else:
+        #     self.remove_item(item_id)
         return item
 
 def room_db_to_class(world, model_info, items):
