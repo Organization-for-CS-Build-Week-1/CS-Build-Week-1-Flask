@@ -126,7 +126,7 @@ class World:
         DB.session.commit()  # Save DB changes
         self.players.pop(player.auth_key)
 
-    def confirm_highscores(self, player):
+    def confirm_highscores(self, player, single_socket=False):
         """
         Checks the player's highscore with the top three.
 
@@ -135,11 +135,19 @@ class World:
 
         emits "highscoreupdate"
         """
-        sendScores = False
-        if player in self.highscores:
-            # Even if the player doesn't move a place,
-            # their score change still needs to be sent
-            sendScores = True
+        send_scores = False
+
+        in_highscores = False
+        for p in self.highscores:
+            # Check whether our current player is
+            # already in our highscore roster
+            if isinstance(p, Player) and p.id == player.id:
+                in_highscores = True
+
+        if in_highscores:
+            # If the player is in the highscores array
+            # loop through the array to update player order
+            send_scores = True
             for i in range(2, 0, -1):
                 if self.highscores[i - 1] is None or (self.highscores[i] and self.highscores[i].highscore > self.highscores[i - 1].highscore):
                     # If the compare value is None, or
@@ -148,22 +156,30 @@ class World:
                     temp = self.highscores[i]
                     self.highscores[i] = self.highscores[i - 1]
                     self.highscores[i - 1] = temp
+
         else:
+            # If the player is not in the highscores,
+            # Check if their highscore places them in the top three
             for i in range(2):
                 if self.highscores[i] is None or player.highscore > self.highscores[i].highscore:
                     # If you find a highscore lower than the player, or
                     # the compared spot is None, stick the player in there
-                    sendScores = True
+                    send_scores = True
                     temp = player
                     player = self.highscores[i]
                     self.highscores[i] = temp
-        if sendScores:
-            send_highscores = [None, None, None]
-            for i in range(len(self.highscores)):
-                p = self.highscores[i]
-                if isinstance(p, Player):
-                    send_highscores[i] = f"{p.username} {p.highscore}"
-            emit("highscoreupdate", send_highscores, broadcast=True)
+
+        if send_scores or single_socket:
+            # If our highscore values changed,
+            # send the new highscore info to everyone
+            send_highscores = [
+                f"{p.username} {p.highscore}" for p in self.highscores if isinstance(p, Player)]
+            if single_socket:
+                # Single socket → someone just loaded into the world.
+                # return the highscores so they will be sent only to the player
+                return send_highscores
+            else:
+                emit("highscoreupdate", send_highscores, broadcast=True)
 
     def get_map_info(self):
         """
