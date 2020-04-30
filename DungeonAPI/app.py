@@ -3,13 +3,12 @@ import json
 from functools import wraps
 from time import time
 from uuid import uuid4
-from threading import Thread
 
 from flask import Flask, jsonify, request, render_template
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from decouple import config
 
-from .room import Room
+from .room import Room, Store
 from .player import Player
 from .world import World
 from .blueprints import items_blueprint, users_blueprint, rooms_blueprint, worlds_blueprint
@@ -18,16 +17,6 @@ from .models import DB, Users, Items, Worlds, Rooms
 
 
 def create_app():
-
-    def update_item_db(app_context, item_id, player_id, room_id):
-        """Finds the item with the given id, and updates its foreign keys in the DB"""
-        with app.app_context():
-            item = Items.query.filter_by(id=item_id).first()
-            item.room_id = room_id
-            item.player_id = player_id
-            DB.session.merge(item)
-            DB.session.commit()
-        return
 
     def room_update(player, chatmessage, chat_only=False):
         """
@@ -176,7 +165,8 @@ def create_app():
     @app.route('/api/check')
     def check():
         # Check if server is running and load world.
-        world.create_world()  # TODO: Remove when done testing.
+        value = request.get_json()
+        world.create_world(value.get('seed'))
         world.save_to_db(DB)
         if not world.loaded:
             try:
@@ -312,10 +302,11 @@ def create_app():
             return emit("takeError", {
                 "error": "You must provide a valid item_id integer"})
 
+        if isinstance(player.current_room, Store):
+            return emit("takeError", {"error": "You must barter at the store"})
+
         chatmessage = player.take_item(item_id)
         if chatmessage:
-            Thread(target=update_item_db, args=(
-                app, item_id, player.id, None)).start()
             emit("playerupdate", player.serialize())
             return room_update(player, chatmessage)
         elif chatmessage is None:
@@ -340,8 +331,6 @@ def create_app():
 
         chatmessage = player.drop_item(item_id)
         if chatmessage:
-            Thread(target=update_item_db, args=(
-                app, item_id, None, player.current_room.id)).start()
             emit("playerupdate", player.serialize())
             return room_update(player, chatmessage)
         else:
@@ -367,11 +356,48 @@ def create_app():
         response = {'error': "Not implemented"}
         return emit('error', response)
 
-    @socketio.on('buy')
-    def buy_item():
-        # IMPLEMENT THIS
-        response = {'error': "Not implemented"}
-        return emit('error', response)
+    @socketio.on('barter')
+    @player_in_world
+    def barter_item(player, data=None, *_, **__):
+        print_socket_info(request.sid, data)
+
+        bad_format = {
+                'error': 'Please provide a valid data dictionary.',
+                'required': '{"player_item_ids": int[], "store_item_id": int}'
+            }
+
+        if not  isinstance(data, dict):
+            return emit('barterError', bad_format)
+
+        player_item_ids = data.get('player_item_ids')
+        store_item_id   = data.get('store_item_id')
+        store = world.rooms.get(tuple(player.world_loc))
+
+        if not store or not isinstance(store, Store):
+            response = {
+                'error': 'The current room is not a store.'
+            }
+            return emit('storeError', response)
+
+        if not isinstance(player_item_ids, list) or not isinstance(store_item_id, int):
+            return emit('barterError', bad_format)
+
+        for id in player_item_ids:
+            if not isinstance(id, int):
+                return emit('barterError', bad_format)
+
+        response = player.barter(player_item_ids, store_item_id)
+        if 'error' in response:
+            if 'full' in response:
+                response = {
+                    'error': 'Your inventory is too full!'
+                }
+                return emit('full', response)
+            else:
+                return emit('barterError', response)
+        
+        emit('playerupdate', player.serialize())
+        return room_update(player, response.get('chat'))
 
     @socketio.on('sell')
     def sell_item():

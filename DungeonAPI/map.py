@@ -1,6 +1,6 @@
 import random
 import time
-from .room import Room, Tunnel, DeadEnd
+from .room import Room, Tunnel, DeadEnd, Store
 from .item import Trash, Stick, Gem, Hammer
 from .constants.adjectives import adjectives
 from .constants.places import places
@@ -53,6 +53,9 @@ class Map:
         elif room_type == "tunnel":
             loc_name = {"place": "tunnel", "adjective": None}
             return Tunnel(world, world_loc, loc_name, id)
+        elif room_type == "store":
+            loc_name = {"place": "ant store", "adjective": None}
+            return Store(world, world_loc, loc_name, id)
         else:
             loc_name    = self.get_loc_name()
             title_adj   = loc_name["adjective"].title()
@@ -69,7 +72,9 @@ class Map:
     def generate_grid(self, map_seed = None):
         walkers = [
             Walker(self, 1, 2, self.center, self.center + 1),
-            Walker(self, 2, 3, self.center + 1, self.center)
+            Walker(self, 2, 3, self.center + 1, self.center),
+            Walker(self, 3, 3, self.center - 1, self.center),
+            Walker(self, 4, 2, self.center, self.center - 1)
         ]
         if map_seed is None:
             grid_seed = random.randint(0, 10**6)
@@ -150,21 +155,25 @@ class Map:
             room.description += ' '.join(desc_strings)
 
     def generate_rooms(self, world=None):
+        room_count = 0 
         for i in range(self.size):
             for j in range(self.size):
                 if self.grid[i][j] == 1:
                     neighbors = self.get_neighbors(i, j)
-                    if len(neighbors) == 1:
-                        room = self.create_room(j, i, 'dead-end', world)
+                    if room_count % 50 == 0:
+                        room_type = 'store'
+                    elif len(neighbors) == 1:
+                        room_type = 'dead-end'
                     elif len(neighbors) > 2:
-                        room = self.create_room(j, i, 'room', world)
+                        room_type = 'room'
                     else:
                         corner = self.get_corner_type(neighbors)
                         if corner and self.has_inside_diag_neighbor(corner, i, j):
-                            room = self.create_room(j, i, 'room', world)
+                            room_type = 'room'
                         else:
-                            room = self.create_room(j, i, 'tunnel', world)
-                    self.rooms[(j,i)] = room
+                            room_type = 'tunnel'
+                    self.rooms[(j,i)] = self.create_room(j, i, room_type, world)
+                    room_count += 1
         self.get_descriptions()
         return self.rooms
 
@@ -176,6 +185,8 @@ class Map:
                     room = self.rooms.get((j,i))
                     if isinstance(room, Tunnel):
                         item_str = "\x1b[1;32m1"
+                    elif isinstance(room, Store):
+                        item_str = "\x1b[1;34m1"
                     elif isinstance(room, DeadEnd):
                         item_str = "\x1b[1;35m1"
                     else:
@@ -183,7 +194,7 @@ class Map:
                 else:
                     item_str = "\x1b[1;30m0"
                 row_str += item_str
-
+            print(row_str)
 
 class Walker:
     def __init__(self, map, mode, rand_factor, y=0, x=0):

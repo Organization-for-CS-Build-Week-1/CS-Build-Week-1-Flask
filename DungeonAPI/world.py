@@ -4,7 +4,7 @@ import bcrypt
 from flask_socketio import emit
 from decouple import config
 
-from .room import Room
+from .room import room_db_to_class
 from .player import Player
 from .map import Map
 from .item import db_to_class
@@ -197,7 +197,9 @@ class World:
 
         return {"rooms": rooms, "stores": stores}
 
-    def create_world(self):
+    def create_world(self, seed=None):
+        if seed:
+            self.map_seed = seed
         map = Map(25, 150)
         self.map_seed = map.generate_grid(map_seed=self.map_seed)
         self.rooms = map.generate_rooms(self)
@@ -258,8 +260,7 @@ class World:
         for r in Rooms.query.all():
             world_loc = (r.x, r.y)
             items = {i.id: db_to_class(i) for i in r.items}
-            room = Room(self, r.name, r.description,
-                        world_loc, id=r.id, items=items)
+            room = room_db_to_class(self, r, items)
 
             self.rooms[room.world_loc] = room
 
