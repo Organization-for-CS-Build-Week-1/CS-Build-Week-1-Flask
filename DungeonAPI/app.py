@@ -268,8 +268,11 @@ def create_app():
     def init(player, *_, **__):
         print_socket_info(request.sid)
 
-        # Send map information
+        # Send map and highscore information
         response = player.world.get_map_info(),
+        highscoreupdate = player.world.confirm_highscores(
+            player, single_socket=True)
+        emit("highscoreupdate", highscoreupdate)
         emit('mapinfo', response)
         emit('playerupdate', player.serialize())
         # Send current room information
