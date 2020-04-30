@@ -56,8 +56,8 @@ class Room:
 
     def get_item_coords(self, item):
         """ Hash an item into a pair of coordniates. """
-        x = hash((self.name, self.description, item)) % 480
-        y = hash((item, self.name, self.description)) % 480
+        x = hash((self.name, self.description, item)) % 420
+        y = hash((item, self.name, self.description)) % 420
 
         return (x, y)
 
