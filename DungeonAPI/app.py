@@ -8,7 +8,7 @@ from flask import Flask, jsonify, request, render_template
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from decouple import config
 
-from .room import Room
+from .room import Room, Store
 from .player import Player
 from .world import World
 from .blueprints import items_blueprint, users_blueprint, rooms_blueprint, worlds_blueprint
@@ -311,11 +311,39 @@ def create_app():
         response = {'error': "Not implemented"}
         return jsonify(response), 400
 
-    @socketio.on('buy')
-    def buy_item():
-        # IMPLEMENT THIS
-        response = {'error': "Not implemented"}
-        return jsonify(response), 400
+    @socketio.on('barter')
+    @player_in_world
+    def barter_item(player, player_item_ids, store_item_id):
+        player_item_ids = data.get('player_item_ids')
+        store_item_id   = data.get('store_item_id')
+        print_socket_info(request.sid, f"barter items {player_item_ids} for {store_item_id}")
+
+        value = sum([item.score for item in player.items if item.id in player_item_ids])
+        store = world.rooms.get(player.world_loc)
+        if store and isinstance(store, Store):
+            success = store.barter_item(store_item_id, value)
+        else:
+            response = {
+                'error': 'The current room is not a store.'
+            }
+            return emit('storeError', response)
+        if success:
+            for id in player_item_ids:
+                player.barter_item(id)
+            player.take_item(store_item_id)
+        elif success is None:
+            response = {
+                'error': 'This item is not in the room.'
+            }
+            return emit('takeError', response)
+        else:
+            response = {
+                'error': 'You need to barter something more valuable!'
+            }
+            return emit('full', response)
+
+        # response = {'error': "Not implemented"}
+        # return jsonify(response), 400
 
     @socketio.on('sell')
     def sell_item():

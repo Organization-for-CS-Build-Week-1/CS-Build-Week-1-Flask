@@ -119,7 +119,7 @@ class Store(Room):
         ]
         self.items = { item.id:item for item in random.choices(potential_inventory, k=1)[0]}
         print(f"\n{self.world_loc}\n")
-        print(self.items)
+        # print(self.items)
 
     def barter_item(self, item_id, barter_value):
         now = datetime.now()
