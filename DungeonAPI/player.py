@@ -104,11 +104,6 @@ class Player:
         article = "some" if isinstance(item, Trash) else "a"
         return f"{self.username} took {article} {item.name}"
 
-    def barter_item(self, item_id):
-        if item_id not in self.items:
-            return None
-        self.items.pop(item_id)
-
     def serialize(self):
         return {
             'id': self.id,
