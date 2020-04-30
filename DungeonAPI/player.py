@@ -73,6 +73,11 @@ class Player:
         self.items[item.id] = item
         return True
 
+    def barter_item(self, item_id):
+        if item_id not in self.items:
+            return None
+        self.items.pop(item_id)
+
     def serialize(self):
         return {
             'id': self.id,
