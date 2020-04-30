@@ -86,7 +86,7 @@ class Player:
         article = "some" if isinstance(item, Trash) else "a"
         return f"{self.username} dropped {article} {item.name}"
 
-    def sell(self, item_ids):
+    def barter(self, item_ids, store_item_id):
         """
         Sells several items to a store.
         When successful, creates thread to update items in DB.
@@ -95,15 +95,34 @@ class Player:
             player doesn't have item ids → False
             successful sell → chatmessage
         """
-        if not all(id in self.items for id in item_ids):
-            return False
+        # Get total score and weight from items
+        total_value = 0
+        total_weight = 0
+        for id in item_ids:
+            if id not in self.items:
+                # If an item isn't in player inventory, fail
+                return {'error': 'You don\'t have all of these items.'}
+            total_value  += self.items[id].score
+            total_weight += self.items[id].weight
+
+        success = self.current_room.barter_item(store_item_id, total_value)
+        if success is None:
+            return {'error': 'This item is not in the room.'}
+        if success == False:
+            return {'error': 'You need to barter something more valuable!'}
+
+        item_weight = self.current_room.get_item_weight(store_item_id)
+        new_weight = self.weight - total_weight + item_weight
+        if new_weight > self.max_weight:
+            return {'error': 'Your inventory is too full!', 'full': None}
+
         for item_id in item_ids:
             item = self.items.pop(item_id)
             self.current_room.add_item(item)
         Thread(target=update_items_db, args=(current_app._get_current_object(),
                                              item_ids, None, self.current_room.id)).start()
-        emit("roomupdate", {
-             room: None, chat: f"{self.username} sold at the store"}, room=str(player.world_loc))
+        message = self.take_item(store_item_id)
+        return {'chat': f"{self.username} bartered at the store"}
 
     def take_item(self, item_id):
         """
