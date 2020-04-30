@@ -109,7 +109,7 @@ class Store(Room):
         if items is None:
             self.set_inventory()
 
-    def set_inventory(self, reset=None):
+    def set_inventory(self):
         potential_inventory = [
             [Trash(random.randint(0, 10**8)) for _ in range(15)],
             [Stick(random.randint(0, 10**8)) for _ in range(15)],
@@ -117,21 +117,18 @@ class Store(Room):
             [Hammer(random.randint(0, 10**8)) for _ in range(15)]
         ]
         inventory = random.choices(potential_inventory, k=1)[0]
-        if reset:
-            self.items = {}
-            for i in inventory:
-                item = Items(i.name, i.weight, i.score)
-                DB.session.add(item)
-                DB.session.commit()
-                self.items[item.id] = db_to_class(item)
-        else:
-            self.items = {i.id: i for i in inventory}
+        self.items = {}
+        for i in inventory:
+            item = Items(i.name, i.weight, i.score)
+            DB.session.add(item)
+            DB.session.commit()
+            self.items[item.id] = db_to_class(item)
 
-    def barter_item(self, item_id, barter_value, reset=None):
+    def barter_item(self, item_id, barter_value):
         now = datetime.now()
         if now > self.last_reset + timedelta(minutes=10):
             self.last_reset = now
-            self.set_inventory(reset)
+            self.set_inventory()
         item = self.items.get(item_id)
         if not item:
             return None
