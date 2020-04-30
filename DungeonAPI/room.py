@@ -1,6 +1,7 @@
 import random
 from datetime import datetime, timedelta
-from .item import Item, Trash, Stick, Gem, Hammer
+from .item import Item, Trash, Stick, Gem, Hammer, db_to_class
+from .models import DB, Items
 
 
 class Room:
@@ -108,20 +109,29 @@ class Store(Room):
         if items is None:
             self.set_inventory()
 
-    def set_inventory(self):
+    def set_inventory(self, reset=None):
         potential_inventory = [
             [Trash(random.randint(0, 10**8)) for _ in range(15)],
             [Stick(random.randint(0, 10**8)) for _ in range(15)],
             [Gem(random.randint(0, 10**8)) for _ in range(15)],
             [Hammer(random.randint(0, 10**8)) for _ in range(15)]
         ]
-        self.items = { item.id:item for item in random.choices(potential_inventory, k=1)[0]}
+        inventory = random.choices(potential_inventory, k=1)[0]
+        if reset:
+            self.items = {}
+            for i in inventory:
+                item = Items(i.name, i.weight, i.score)
+                DB.session.add(item)
+                DB.session.commit()
+                self.items[item.id] = db_to_class(item)
+        else:
+            self.items = {i.id: i for i in inventory}
 
-    def barter_item(self, item_id, barter_value):
+    def barter_item(self, item_id, barter_value, reset=None):
         now = datetime.now()
-        if now > self.last_reset + timedelta(minutes=10):
-            self.set_inventory()
-        print(self.items)
+        if now > self.last_reset + timedelta(minutes=2):
+            self.last_reset = now
+            self.set_inventory(reset)
         item = self.items.get(item_id)
         if not item:
             return None
