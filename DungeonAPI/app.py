@@ -301,6 +301,12 @@ def create_app():
 
         chatmessage = player.take_item(item_id)
         if chatmessage:
+            if chatmessage is not None and chatmessage is not False:
+                item = Items.query.filter_by(id=item_id).first()
+                item.room_id=None
+                item.player_id=player.id
+                DB.session.merge(item)
+                DB.session.commit()
             emit("playerupdate", player.serialize())
             return room_update(player, chatmessage)
         elif chatmessage is None:
@@ -325,6 +331,12 @@ def create_app():
 
         chatmessage = player.drop_item(item_id)
         if chatmessage:
+            if chatmessage is not False:
+                item = Items.query.filter_by(id=item_id).first()
+                item.room_id=player.current_room.id
+                item.player_id=None
+                DB.session.merge(item)
+                DB.session.commit()
             emit("playerupdate", player.serialize())
             return room_update(player, chatmessage)
         else:
