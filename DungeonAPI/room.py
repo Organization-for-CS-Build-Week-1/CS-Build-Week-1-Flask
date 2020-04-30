@@ -129,7 +129,7 @@ class Store(Room):
 
     def barter_item(self, item_id, barter_value, reset=None):
         now = datetime.now()
-        if now > self.last_reset + timedelta(minutes=2):
+        if now > self.last_reset + timedelta(minutes=10):
             self.last_reset = now
             self.set_inventory(reset)
         item = self.items.get(item_id)
