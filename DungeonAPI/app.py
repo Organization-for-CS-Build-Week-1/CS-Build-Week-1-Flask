@@ -3,6 +3,7 @@ import json
 from functools import wraps
 from time import time
 from uuid import uuid4
+from threading import Thread
 
 from flask import Flask, jsonify, request, render_template
 from flask_socketio import SocketIO, emit, join_room, leave_room
@@ -17,6 +18,16 @@ from .models import DB, Users, Items, Worlds, Rooms
 
 
 def create_app():
+
+    def update_item_db(app_context, item_id, player_id, room_id):
+        """Finds the item with the given id, and updates its foreign keys in the DB"""
+        with app.app_context():
+            item = Items.query.filter_by(id=item_id).first()
+            item.room_id = room_id
+            item.player_id = player_id
+            DB.session.merge(item)
+            DB.session.commit()
+        return
 
     def room_update(player, chatmessage, chat_only=False):
         """
@@ -97,7 +108,7 @@ def create_app():
         Items.__table__.create(DB.engine, checkfirst=True)
         # Loads our world if it exists
         world.load_from_db(DB)
-        
+
         if len(world.rooms) == 0:
             # If the world is empty, creates one
             world.create_world()
@@ -110,7 +121,6 @@ def create_app():
             if 'key' in quth:
                 player = world.get_player_by_auth(quth['key'])
                 world.save_player_to_db(player)
-
 
     @app.after_request
     def after_request(response):
@@ -301,6 +311,8 @@ def create_app():
 
         chatmessage = player.take_item(item_id)
         if chatmessage:
+            Thread(target=update_item_db, args=(
+                app, item_id, player.id, None)).start()
             emit("playerupdate", player.serialize())
             return room_update(player, chatmessage)
         elif chatmessage is None:
@@ -325,6 +337,8 @@ def create_app():
 
         chatmessage = player.drop_item(item_id)
         if chatmessage:
+            Thread(target=update_item_db, args=(
+                app, item_id, None, player.current_room.id)).start()
             emit("playerupdate", player.serialize())
             return room_update(player, chatmessage)
         else:
