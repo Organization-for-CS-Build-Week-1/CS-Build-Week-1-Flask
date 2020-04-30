@@ -34,7 +34,9 @@ class Combat:
         if datetime.datetime.now().timestamp() - self.start_time > 30:
             return self.determine_winner(player1_item_ids, player2_item_ids)
         else:
-            response = {"combat":f"Combat is still going between {self.player1.username} and  {self.player2.username}."}
+            response = {"combat":f"Combat is still going between {self.player1.username} and  {self.player2.username}.",
+                        "player_1_items":[ i.serialize() for i in self.player1_set ],
+                        "player_2_items":[ i.serialize() for i in self.player2_set ]}
             return response
 
     def determine_winner(self):
