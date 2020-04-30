@@ -371,6 +371,7 @@ def create_app():
             for id in player_item_ids:
                 player.barter_item(id)
             player.take_item(store_item_id)
+            emit("playerupdate", player.serialize())
         elif success is None:
             response = {
                 'error': 'This item is not in the room.'
