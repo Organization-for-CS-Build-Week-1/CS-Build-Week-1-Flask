@@ -86,7 +86,7 @@ class Room:
 
 class Tunnel(Room):
 
-    def __init__(self, world, world_loc, loc_name, id=0, items=None):
+    def __init__(self, world, world_loc, loc_name=None, id=0, items=None):
         name        = f"Tunnel segment {world_loc[0]}-{world_loc[1]}"
         description = "An underground tunnel. Where does it lead? Continue to find out!"
         super().__init__(world, name, description, world_loc, loc_name, id, items)
@@ -95,14 +95,14 @@ class Tunnel(Room):
 
 class DeadEnd(Room):
 
-    def __init__(self, world, world_loc, loc_name, id=0, items=None):
+    def __init__(self, world, world_loc, loc_name=None, id=0, items=None):
         name = f"Dead end {world_loc[0]}-{world_loc[1]}"
         description = "A dead end. Some thoughtless ant built a tunnel to nowhere! Better turn around."
         super().__init__(world, name, description, world_loc, loc_name, id, items)
 
 class Store(Room):
 
-    def __init__(self, world, world_loc, loc_name, id=0, items=None):
+    def __init__(self, world, world_loc, loc_name=None, id=0, items=None):
         name = "Ant Store"
         description = "A fabulous store where you can buy all things ant!"
         super().__init__(world, name, description, world_loc, loc_name, id, items)
@@ -117,8 +117,6 @@ class Store(Room):
             [Hammer(random.randint(0, 10**8)) for _ in range(15)]
         ]
         self.items = { item.id:item for item in random.choices(potential_inventory, k=1)[0]}
-        print(f"\n{self.world_loc}\n")
-        # print(self.items)
 
     def barter_item(self, item_id, barter_value):
         now = datetime.now()
@@ -132,4 +130,18 @@ class Store(Room):
         else:
             self.items.remove_item(item_id)
         return item
+
+def room_db_to_class(world, model_info, items):
+    """Function that takes in DB information and returns the correct Room class"""
+    name = model_info.name.lower()
+    world_loc = (model_info.x, model_info.y)
+    if "tunnel" in name:
+        return Tunnel(world, world_loc, id=model_info.id, items = items)
+    elif "dead end" in name:
+        return DeadEnd(world, world_loc, id=model_info.id, items = items)
+    elif "store" in name:
+        return Store(world, world_loc, id=model_info.id, items = items)
+    else:
+        return Room(world, model_info.name, model_info.description, world_loc,
+                    id=model_info.id, items = items)
 
