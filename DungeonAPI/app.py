@@ -360,7 +360,7 @@ def create_app():
                 'error': 'Please provide a valid data dictionary.',
                 'required': '{"player_item_ids": int[], "store_item_id": int}'
             }
-            
+
         if not  isinstance(data, dict):
             return emit('barterError', bad_format)
 
@@ -382,7 +382,7 @@ def create_app():
                 return emit('barterError', bad_format)
 
         value = sum([item.score for id, item in player.items.items() if id in player_item_ids])
-        success = store.barter_item(store_item_id, value)
+        success = store.barter_item(store_item_id, value, reset=True)
 
         if success is None:
             response = {
@@ -398,7 +398,7 @@ def create_app():
         for id in player_item_ids:
             player.drop_item(id)
 
-        chatmessage = player.take_item(item_id)
+        chatmessage = player.take_item(store_item_id)
         if chatmessage:
             emit("playerupdate", player.serialize())
             return room_update(player, chatmessage)
@@ -412,11 +412,6 @@ def create_app():
                 'error': 'Your inventory is too full!'
             }
             return emit('full', response)
-
-        emit("playerupdate", player.serialize())
-
-        # response = {'error': "Not implemented"}
-        # return jsonify(response), 400
 
     @socketio.on('sell')
     def sell_item():
