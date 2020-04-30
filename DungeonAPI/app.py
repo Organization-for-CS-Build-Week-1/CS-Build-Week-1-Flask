@@ -395,7 +395,13 @@ def create_app():
             if not isinstance(id, int):
                 return emit('barterError', bad_format)
 
-        value = sum([item.score for id, item in player.items.items() if id in player_item_ids])
+        if not all([id in player.items for id in player_item_ids]):
+            response = {
+                'error': 'Not all of those items are in yout inventory.'
+            }
+            return emit('takeError', response)
+
+        value = sum([player.items[id].score for id in player_item_ids])
         success = store.barter_item(store_item_id, value, reset=True)
 
         if success is None:
