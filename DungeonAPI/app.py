@@ -397,7 +397,7 @@ def create_app():
 
         if not all([id in player.items for id in player_item_ids]):
             response = {
-                'error': 'Not all of those items are in yout inventory.'
+                'error': 'Not all of those items are in your inventory.'
             }
             return emit('takeError', response)
 
