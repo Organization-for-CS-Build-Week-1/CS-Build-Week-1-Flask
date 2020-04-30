@@ -353,13 +353,13 @@ def create_app():
 
     @socketio.on('barter')
     @player_in_world
-    def barter_item(player, player_item_ids, store_item_id):
+    def barter_item(player, data):
         player_item_ids = data.get('player_item_ids')
         store_item_id   = data.get('store_item_id')
         print_socket_info(request.sid, f"barter items {player_item_ids} for {store_item_id}")
 
-        value = sum([item.score for item in player.items if item.id in player_item_ids])
-        store = world.rooms.get(player.world_loc)
+        value = sum([item.score for id, item in player.items.items() if id in player_item_ids])
+        store = world.rooms.get(tuple(player.world_loc))
         if store and isinstance(store, Store):
             success = store.barter_item(store_item_id, value)
         else:
