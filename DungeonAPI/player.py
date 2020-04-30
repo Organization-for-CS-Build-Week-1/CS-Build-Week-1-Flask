@@ -1,6 +1,10 @@
 import random
 import uuid
+from threading import Thread
+from flask import current_app
+from flask_socketio import emit
 from .item import Trash
+from .models import update_items_db
 
 
 class Player:
@@ -67,7 +71,8 @@ class Player:
     def drop_item(self, item_id):
         """
         Drops an item in the room.
-        
+        When successful, creates thread to update item in DB.
+
         Returns:
             player doesn't have item → False
             successful drop → chatmessage for the room
@@ -76,16 +81,38 @@ class Player:
             return False
         item = self.items.pop(item_id)
         self.current_room.add_item(item)
+        Thread(target=update_items_db, args=(current_app._get_current_object(), [
+               item.id], None, self.current_room.id)).start()
         article = "some" if isinstance(item, Trash) else "a"
         return f"{self.username} dropped {article} {item.name}"
+
+    def sell(self, item_ids):
+        """
+        Sells several items to a store.
+        When successful, creates thread to update items in DB.
+
+        Returns:
+            player doesn't have item ids → False
+            successful sell → chatmessage
+        """
+        if not all(id in self.items for id in item_ids):
+            return False
+        for item_id in item_ids:
+            item = self.items.pop(item_id)
+            self.current_room.add_item(item)
+        Thread(target=update_items_db, args=(current_app._get_current_object(),
+                                             item_ids, None, self.current_room.id)).start()
+        emit("roomupdate", {
+             room: None, chat: f"{self.username} sold at the store"}, room=str(player.world_loc))
 
     def take_item(self, item_id):
         """
         Takes an item from the room.
-        
+        When successful, creates thread to update items in DB.
+
         If the player's new score is greater than the highscore,
         also updates highscore.
-        
+
         Returns:
             item not in room → None
             player's inventory too full → False
@@ -101,13 +128,10 @@ class Player:
         if self.score > self.highscore:
             self.highscore = self.score
             self.world.confirm_highscores(self)
+        Thread(target=update_items_db, args=(
+            current_app._get_current_object(), [item.id], self.id, None)).start()
         article = "some" if isinstance(item, Trash) else "a"
         return f"{self.username} took {article} {item.name}"
-
-    def barter_item(self, item_id):
-        if item_id not in self.items:
-            return None
-        self.items.pop(item_id)
 
     def serialize(self):
         return {
