@@ -91,8 +91,6 @@ class Tunnel(Room):
         description = "An underground tunnel. Where does it lead? Continue to find out!"
         super().__init__(world, name, description, world_loc, loc_name, id, items)
 
-
-
 class DeadEnd(Room):
 
     def __init__(self, world, world_loc, loc_name=None, id=0, items=None):
@@ -129,8 +127,6 @@ class Store(Room):
             return None
         elif item.score > barter_value:
             return False
-        # else:
-        #     self.remove_item(item_id)
         return item
 
 def room_db_to_class(world, model_info, items):
