@@ -3,6 +3,22 @@ from flask_sqlalchemy import SQLAlchemy
 DB = SQLAlchemy()
 
 
+def update_items_db(app, item_ids, player_id, room_id):
+    """
+    Finds the items with the given id,
+    and updates their foreign keys in the DB.
+
+    item_ids MUST be passed in as a list.
+    """
+    with app.app_context():
+        db_items = Items.query.filter(Items.id.in_(item_ids)).all()
+        for i in db_items:
+            i.room_id = room_id
+            i.player_id = player_id
+        DB.session.commit()
+    return
+
+
 class Worlds(DB.Model):
     __tablename__ = 'worlds'
 

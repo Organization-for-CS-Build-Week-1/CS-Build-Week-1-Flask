@@ -1,6 +1,10 @@
 import random
 import uuid
+from threading import Thread
+from flask import current_app
+from flask_socketio import emit
 from .item import Trash
+from .models import update_items_db
 
 
 class Player:
@@ -69,7 +73,8 @@ class Player:
     def drop_item(self, item_id):
         """
         Drops an item in the room.
-        
+        When successful, creates thread to update item in DB.
+
         Returns:
             player doesn't have item → False
             successful drop → chatmessage for the room
@@ -78,16 +83,57 @@ class Player:
             return False
         item = self.items.pop(item_id)
         self.current_room.add_item(item)
+        Thread(target=update_items_db, args=(current_app._get_current_object(), [
+               item.id], None, self.current_room.id)).start()
         article = "some" if isinstance(item, Trash) else "a"
         return f"{self.username} dropped {article} {item.name}"
+
+    def barter(self, item_ids, store_item_id):
+        """
+        Sells several items to a store.
+        When successful, creates thread to update items in DB.
+
+        Returns:
+            player doesn't have item ids → False
+            successful sell → chatmessage
+        """
+        # Get total score and weight from items
+        total_value = 0
+        total_weight = 0
+        for id in item_ids:
+            if id not in self.items:
+                # If an item isn't in player inventory, fail
+                return {'error': 'You don\'t have all of these items.'}
+            total_value  += self.items[id].score
+            total_weight += self.items[id].weight
+
+        success = self.current_room.barter_item(store_item_id, total_value)
+        if success is None:
+            return {'error': 'This item is not in the room.'}
+        if success == False:
+            return {'error': 'You need to barter something more valuable!'}
+
+        item_weight = self.current_room.get_item_weight(store_item_id)
+        new_weight = self.weight - total_weight + item_weight
+        if new_weight > self.max_weight:
+            return {'error': 'Your inventory is too full!', 'full': None}
+
+        for item_id in item_ids:
+            item = self.items.pop(item_id)
+            self.current_room.add_item(item)
+        Thread(target=update_items_db, args=(current_app._get_current_object(),
+                                             item_ids, None, self.current_room.id)).start()
+        message = self.take_item(store_item_id)
+        return {'chat': f"{self.username} bartered at the store"}
 
     def take_item(self, item_id):
         """
         Takes an item from the room.
-        
+        When successful, creates thread to update items in DB.
+
         If the player's new score is greater than the highscore,
         also updates highscore.
-        
+
         Returns:
             item not in room → None
             player's inventory too full → False
@@ -103,6 +149,8 @@ class Player:
         if self.score > self.highscore:
             self.highscore = self.score
             self.world.confirm_highscores(self)
+        Thread(target=update_items_db, args=(
+            current_app._get_current_object(), [item.id], self.id, None)).start()
         article = "some" if isinstance(item, Trash) else "a"
         return f"{self.username} took {article} {item.name}"
 
