@@ -2,6 +2,7 @@ import random
 import math
 import bcrypt
 from flask_socketio import emit
+from decouple import config
 
 from .room import Room
 from .player import Player
@@ -51,7 +52,7 @@ class World:
         world_loc = list(self.rooms.keys())[0]
 
         # Add user to DB first to get player id
-        new_user = Users(username, password_hash, username == "6k6",
+        new_user = Users(username, password_hash, username == config("ADMIN_USERNAME"),
                          world_loc[0], world_loc[1])
         DB.session.add(new_user)
         DB.session.commit()
