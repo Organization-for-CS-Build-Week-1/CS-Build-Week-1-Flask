@@ -353,35 +353,67 @@ def create_app():
 
     @socketio.on('barter')
     @player_in_world
-    def barter_item(player, data):
+    def barter_item(player, data=None, *_, **__):
+        print_socket_info(request.sid, data)
+
+        bad_format = {
+                'error': 'Please provide a valid data dictionary.',
+                'required': '{"player_item_ids": int[], "store_item_id": int}'
+            }
+            
+        if not  isinstance(data, dict):
+            return emit('barterError', bad_format)
+
         player_item_ids = data.get('player_item_ids')
         store_item_id   = data.get('store_item_id')
-        print_socket_info(request.sid, f"barter items {player_item_ids} for {store_item_id}")
-
-        value = sum([item.score for id, item in player.items.items() if id in player_item_ids])
         store = world.rooms.get(tuple(player.world_loc))
-        if store and isinstance(store, Store):
-            success = store.barter_item(store_item_id, value)
-        else:
+
+        if not store or not isinstance(store, Store):
             response = {
                 'error': 'The current room is not a store.'
             }
             return emit('storeError', response)
-        if success:
-            for id in player_item_ids:
-                player.barter_item(id)
-            player.take_item(store_item_id)
-            emit("playerupdate", player.serialize())
-        elif success is None:
+
+        if not isinstance(player_item_ids, list) or not isinstance(store_item_id, int):
+            return emit('barterError', bad_format)
+
+        for id in player_item_ids:
+            if not isinstance(id, int):
+                return emit('barterError', bad_format)
+
+        value = sum([item.score for id, item in player.items.items() if id in player_item_ids])
+        success = store.barter_item(store_item_id, value)
+
+        if success is None:
             response = {
                 'error': 'This item is not in the room.'
             }
             return emit('takeError', response)
-        else:
+        elif success == False:
             response = {
                 'error': 'You need to barter something more valuable!'
             }
             return emit('full', response)
+
+        for id in player_item_ids:
+            player.drop_item(id)
+
+        chatmessage = player.take_item(item_id)
+        if chatmessage:
+            emit("playerupdate", player.serialize())
+            return room_update(player, chatmessage)
+        elif chatmessage is None:
+            response = {
+                'error': 'This item is not in the room'
+            }
+            return emit('takeError', response)
+        else:
+            response = {
+                'error': 'Your inventory is too full!'
+            }
+            return emit('full', response)
+
+        emit("playerupdate", player.serialize())
 
         # response = {'error': "Not implemented"}
         # return jsonify(response), 400
