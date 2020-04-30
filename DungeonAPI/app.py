@@ -13,23 +13,24 @@ from .player import Player
 from .world import World
 from .blueprints import items_blueprint, users_blueprint, rooms_blueprint, worlds_blueprint
 
-from .models import DB, Users, Items, Worlds
+from .models import DB, Users, Items, Worlds, Rooms
 
 
 def create_app():
 
-    def room_update(player):
+    def room_update(player, chatmessage, chat_only=False):
         """
         Emits info via socket to all players
         in the same room as the given player.
 
         Used for init/move/take/drop,
         to update all players in room simulatneously.
-            Player → Player who just performed action
+            Player      → Player who just performed action
+            chatmessage → message for FE chat
         """
         response = {
-            'room': player.current_room.serialize(),
-            'player': player.serialize(),
+            'room': None if chat_only else player.current_room.serialize(),
+            'chat': chatmessage
         }
         return emit("roomupdate", response, room=str(player.world_loc))
 
@@ -89,15 +90,27 @@ def create_app():
     DB.init_app(app)
 
     with app.app_context():
-        # Creates world with one player and 3 items in our DB
-        quth = world.add_player("6k6", "fdfhgg", "fdfhgg")["key"]
-        player_u = world.get_player_by_auth(quth)
-        new_i1 = Items("Hammer", 0, 0, player_id=player_u.id)
-        new_i2 = Items("Trash", 10, 5, player_id=player_u.id)
-        new_i3 = Items("Gem", 25, 50, player_id=player_u.id)
-        DB.session.bulk_save_objects([new_i1, new_i2, new_i3])
-        DB.session.commit()
+        # Create Tables if they don't already exist
+        Worlds.__table__.create(DB.engine, checkfirst=True)
+        Rooms.__table__.create(DB.engine, checkfirst=True)
+        Users.__table__.create(DB.engine, checkfirst=True)
+        Items.__table__.create(DB.engine, checkfirst=True)
+        # Loads our world if it exists
         world.load_from_db(DB)
+        
+        if len(world.rooms) == 0:
+            # If the world is empty, creates one
+            world.create_world()
+            world.save_to_db(DB)
+        if len(Users.query.all()) == 0:
+            # If we have no users, start with our admin user
+            username = config("ADMIN_USERNAME")
+            password = config("ADMIN_PASSWORD")
+            quth = world.add_player(username, password, password)
+            if 'key' in quth:
+                player = world.get_player_by_auth(quth['key'])
+                world.save_player_to_db(player)
+
 
     @app.after_request
     def after_request(response):
@@ -133,6 +146,9 @@ def create_app():
     @socketio.on("disconnect")
     def disconnect():
         print_socket_info(request.sid, "Left the server.")
+        player = world.get_player_by_auth(request.sid)
+        if player is not None:
+            world.save_player_to_db(player)
 
     @socketio.on("test")
     def test(data):
@@ -145,7 +161,7 @@ def create_app():
 
     @app.route('/socketoptions')
     def socket_options():
-        return jsonify(["register", "login", "test", "init", "move", "take", "drop"]), 200
+        return jsonify(["register", "login", "test", "init", "move", "take", "drop", "chat"]), 200
 
     @app.route('/api/check')
     def check():
@@ -164,13 +180,13 @@ def create_app():
         return jsonify({'message': 'World is up and running'}), 200
 
     @socketio.on('register')
-    def register(data):
+    def register(data=None, *_, **__):
         print_socket_info(request.sid, data)
         required = ['username', 'password1', 'password2']
 
-        if not all(k in data for k in required):
-            response = {'error': "Missing Values",
-                        'required': 'username, password1, password2'}
+        if not data or not all(k in data for k in required):
+            response = {
+                'error': 'Please provide: username, password1, password2'}
             return emit('registerError', response)
 
         username = data.get('username')
@@ -185,12 +201,15 @@ def create_app():
             return emit('register', response)
 
     @socketio.on('login')
-    def login(data):
+    def login(data=None, *_, **__):
         print_socket_info(request.sid, data)
 
-        response = world.load_player_from_db(data.get('username'),
-                                             data.get('password'),
-                                             request.sid)
+        if not data:
+            response = {'error': 'Please provide a username and password'}
+        else:
+            response = world.load_player_from_db(data.get('username'),
+                                                 data.get('password'),
+                                                 request.sid)
 
         if 'error' in response:
             return emit('loginError', response)
@@ -200,7 +219,7 @@ def create_app():
     @socketio.on('debug')
     @player_in_world
     @player_is_admin
-    def debug(player):
+    def debug(player, *_, **__):
         print_socket_info(request.sid)
         response = {'message': "Authority accepted."}
         return emit('debug', response)
@@ -208,7 +227,7 @@ def create_app():
     @socketio.on('debug/save')
     @player_in_world
     @player_is_admin
-    def save(player):
+    def save(player, *_, **__):
         print_socket_info(request.sid)
         world.save_to_db(DB)
 
@@ -218,7 +237,7 @@ def create_app():
     @socketio.on('debug/load')
     @player_in_world
     @player_is_admin
-    def load(player):
+    def load(player, *_, **__):
         print_socket_info(request.sid)
         world.load_from_db(DB)
 
@@ -228,7 +247,7 @@ def create_app():
     @socketio.on('debug/reset')
     @player_in_world
     @player_is_admin
-    def reset(player):
+    def reset(player, *_, **__):
         print_socket_info(request.sid)
         world.create_world()
 
@@ -237,25 +256,24 @@ def create_app():
 
     @socketio.on('init')
     @player_in_world
-    def init(player):
+    def init(player, *_, **__):
         print_socket_info(request.sid)
 
         # Send map information
-        response = {
-            'map': player.world.get_map_info(),
-        } 
+        response = player.world.get_map_info(),
         emit('mapinfo', response)
-
+        emit('playerupdate', player.serialize())
         # Send current room information
         join_room(str(player.world_loc))
-        return room_update(player)
+        chatmessage = f"{player.username} entered the room"
+        return room_update(player, chatmessage)
 
     @socketio.on('move')
     @player_in_world
-    def move(player, direction):
+    def move(player, direction=None, *_, **__):
         print_socket_info(request.sid, direction)
 
-        if direction is None:
+        if direction is None or not isinstance(direction, str) or direction not in "nsew":
             return emit("moveError", {
                 "error": "You must move a direction: 'n', 's', 'e', 'w'"})
 
@@ -265,7 +283,8 @@ def create_app():
             # If the player travels successfully
             leave_room(previous_room)
             join_room(str(player.world_loc))
-            return room_update(player)
+            chatmessage = f"{player.username} entered the room"
+            return room_update(player, chatmessage)
         else:
             response = {
                 'error': "You cannot move in that direction.",
@@ -274,13 +293,18 @@ def create_app():
 
     @socketio.on('take')
     @player_in_world
-    def take_item(player, item_id):
+    def take_item(player, item_id=None, *_, **__):
         print_socket_info(request.sid, f"take {item_id}")
 
-        success = player.take_item(item_id)
-        if success:
-            return room_update(player)
-        elif success is None:
+        if item_id is None or not isinstance(item_id, int):
+            return emit("takeError", {
+                "error": "You must provide a valid item_id integer"})
+
+        chatmessage = player.take_item(item_id)
+        if chatmessage:
+            emit("playerupdate", player.serialize())
+            return room_update(player, chatmessage)
+        elif chatmessage is None:
             response = {
                 'error': 'This item is not in the room'
             }
@@ -291,25 +315,41 @@ def create_app():
             }
             return emit('full', response)
 
-
     @socketio.on('drop')
     @player_in_world
-    def drop_item(player, item_id):
+    def drop_item(player, item_id=None, *_, **__):
         print_socket_info(request.sid, f"drop {item_id}")
 
-        if player.drop_item(item_id):
-            return room_update(player)
+        if item_id is None or not isinstance(item_id, int):
+            return emit("takeError", {
+                "error": "You must provide a valid item_id integer"})
+
+        chatmessage = player.drop_item(item_id)
+        if chatmessage:
+            emit("playerupdate", player.serialize())
+            return room_update(player, chatmessage)
         else:
             response = {
                 'error': 'You don\'t have this item'
             }
             emit('dropError', response)
 
+    @socketio.on('chat')
+    @player_in_world
+    def inventory(player, message=None, *_, **__):
+        print_socket_info(request.sid, f"CHAT: {message}")
+
+        if message is None or not isinstance(message, str):
+            return emit("chatError", {
+                "error": "You must send a message"})
+
+        room_update(player, f"{player.username}: {message}", chat_only=True)
+
     @socketio.on('inventory')
     def inventory():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
-        return jsonify(response), 400
+        return emit('error', response)
 
     @socketio.on('barter')
     @player_in_world
@@ -349,13 +389,13 @@ def create_app():
     def sell_item():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
-        return jsonify(response), 400
+        return emit('error', response)
 
     @socketio.on('rooms')
     def rooms():
         # IMPLEMENT THIS
         response = {'error': "Not implemented"}
-        return jsonify(response), 400
+        return emit('error', response)
 
     return app, socketio
 

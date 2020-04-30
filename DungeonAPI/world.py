@@ -1,6 +1,7 @@
 import random
 import math
 import bcrypt
+from flask_socketio import emit
 
 from .room import Room
 from .player import Player
@@ -19,9 +20,9 @@ class World:
         self.password_salt = bcrypt.gensalt()
         self.rooms         = {}
         self.players       = {}
+        self.highscores    = [None, None, None]
         self.loaded        = False
         self.map_seed      = map_seed
-        self.create_world()
 
     def add_player(self, username, password1, password2, socketid=None):
         """
@@ -40,7 +41,9 @@ class World:
             return {'error': "Username must be longer than 2 characters"}
         elif len(password1) <= 5:
             return {'error': "Password must be longer than 5 characters"}
-        elif self.get_player_by_username(username) is not None:
+
+        user = Users.query.filter_by(username=username).first()
+        if user is not None:
             return {'error': "Username already exists"}
 
         password_hash = bcrypt.hashpw(password1.encode(), self.password_salt)
@@ -70,17 +73,96 @@ class World:
         user = Users.query.filter_by(username=username).first()
         if user is None:
             return {'error': 'Invalid username'}
-
         password_hash = bcrypt.hashpw(password.encode(), self.password_salt)
         if user.password_hash != password_hash:
             return {'error': 'Invalid password'}
 
         world_loc = (user.x, user.y)
-        items = { i.id:db_to_class(i) for i in user.items }
+        items = {i.id: db_to_class(i) for i in user.items}
         player = Player(self, user.id, user.username, world_loc,
-                        user.password_hash, auth_key=socketid, admin_q=user.admin_q, items=items)
+                        user.password_hash, auth_key=socketid, admin_q=user.admin_q, items=items, highscore=user.highscore)
         self.players[player.auth_key] = player
         return {'message': 'logged in', 'key': player.auth_key}
+
+    def save_player_to_db(self, player):
+        """Saves player to db, and sets all items to have player's foreign key"""
+
+        # Get user from DB
+        user = Users.query.filter_by(username=player.username).first()
+        new_user = False
+        if user is None:
+            # No user? Create one
+            new_user = True
+            user = Users(player.username, player.password_hash, player.admin_q,
+                         player.world_loc[0], player.world_loc[1], highscore=player.highscore)
+        else:
+            # Is a user? Update these values
+            user.x         = player.world_loc[0]
+            user.y         = player.world_loc[1]
+            user.highscore = player.highscore
+
+        # Resets items from db, and only assigns items that the player has
+        for i in user.items:
+            i.player_id = None
+        if new_user:
+            DB.session.add(user)
+        DB.session.commit()  # Ensure that our user object has a proper id
+
+        for i in player.items.values():
+            # Get item from db
+            item = Items.query.filter_by(id=i.id).first()
+            new_item = False
+            if item is None:
+                # No item? Create a new one
+                new_item = True
+                item = Items(i.name, i.weight, i.score, player_id=user.id)
+            else:
+                # Yes item? Update these values
+                item.player_id = user.id
+                item.room_id = None
+            if new_item:
+                DB.session.add(item)
+        DB.session.commit()  # Save DB changes
+        self.players.pop(player.auth_key)
+
+    def confirm_highscores(self, player):
+        """
+        Checks the player's highscore with the top three.
+
+        If the player is in the top three, update the values
+        and send to all players.
+
+        emits "highscoreupdate"
+        """
+        sendScores = False
+        if player in self.highscores:
+            # Even if the player doesn't move a place,
+            # their score change still needs to be sent
+            sendScores = True
+            for i in range(2, 0, -1):
+                if self.highscores[i - 1] is None or (self.highscores[i] and self.highscores[i].highscore > self.highscores[i - 1].highscore):
+                    # If the compare value is None, or
+                    # our current highscore is greater than compared highscore
+                    # swap.
+                    temp = self.highscores[i]
+                    self.highscores[i] = self.highscores[i - 1]
+                    self.highscores[i - 1] = temp
+        else:
+            for i in range(2):
+                if self.highscores[i] is None or player.highscore > self.highscores[i].highscore:
+                    # If you find a highscore lower than the player, or
+                    # the compared spot is None, stick the player in there
+                    sendScores = True
+                    temp = player
+                    player = self.highscores[i]
+                    self.highscores[i] = temp
+        if sendScores:
+            send_highscores = [None, None, None]
+            for i in range(len(self.highscores)):
+                p = self.highscores[i]
+                if isinstance(p, Player):
+                    send_highscores[i] = f"{p.username} {p.highscore}"
+            emit("highscoreupdate", send_highscores, broadcast=True)
 
     def get_map_info(self):
         """
@@ -107,12 +189,17 @@ class World:
 
     def save_to_db(self, DB):
         """
-        Erases all data and resaves.
+        Erases all world/room/item data and resaves.
 
-        Not recommended unless a full server refresh is needed.
+        User data is preserved.
         """
-        DB.drop_all()
-        DB.create_all()
+        Items.__table__.drop(DB.engine, checkfirst=True)
+        Worlds.__table__.drop(DB.engine, checkfirst=True)
+        Rooms.__table__.drop(DB.engine, checkfirst=True)
+        Worlds.__table__.create(DB.engine)
+        Rooms.__table__.create(DB.engine)
+        Users.__table__.create(DB.engine, checkfirst=True)
+        Items.__table__.create(DB.engine)
 
         new_world = Worlds(self.password_salt, self.map_seed)
         DB.session.add(new_world)
@@ -125,23 +212,12 @@ class World:
             new_room = Rooms(r.name, r.description,
                              r.world_loc[0], r.world_loc[1])
             DB.session.add(new_room)
+            DB.session.commit()
 
             for i in r.items.values():
-                new_item = Items(i.name, i.weight, i.score, room_id=r.id)
+                new_item = Items(i.name, i.weight, i.score,
+                                 room_id=new_room.id)
                 items.append(new_item)
-
-        DB.session.commit()
-
-        for p in self.players.values():
-            new_user = Users(p.username, p.password_hash,
-                             p.admin_q, p.world_loc[0], p.world_loc[1], highscore=p.highscore)
-            DB.session.add(new_user)
-
-            for i in p.items.values():
-                new_item = Items(i.name, i.weight, i.score, player_id=p.id)
-                items.append(new_item)
-
-        DB.session.commit()
 
         DB.session.bulk_save_objects(items)
         DB.session.commit()
@@ -149,23 +225,28 @@ class World:
     def load_from_db(self, DB):
         """
         Loads all Rooms and any associated items from the database
-        into the game.
+        into the game, if they exist.
 
         This function does NOT load any players. Use `add_player()`
         or `load_player_from_db()` to load players into the game.
         """
-        self.password_salt = Worlds.query.all()[0].password_salt
-        self.map_seed = Worlds.query.all()[0].map_seed
+        db_worlds = Worlds.query.all()
+        if db_worlds is None or len(db_worlds) == 0:
+            DB.session.commit()
+            return
+        self.password_salt = db_worlds[0].password_salt
+        self.map_seed = db_worlds[0].map_seed
 
         self.rooms = {}
         self.players = {}
 
         for r in Rooms.query.all():
             world_loc = (r.x, r.y)
-            items = { i.id:db_to_class(i) for i in r.items }
+            items = {i.id: db_to_class(i) for i in r.items}
             room = Room(self, r.name, r.description,
                         world_loc, id=r.id, items=items)
 
             self.rooms[room.world_loc] = room
 
         self.loaded = True
+        DB.session.commit()

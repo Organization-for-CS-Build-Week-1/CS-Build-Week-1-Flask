@@ -1,5 +1,6 @@
 import random
 import uuid
+from .item import Trash
 
 
 class Player:
@@ -24,6 +25,13 @@ class Player:
         for item in self.items.values():
             total_weight += item.weight
         return total_weight
+
+    @property
+    def score(self):
+        total_score = 0
+        for item in self.items.values():
+            total_score += item.score
+        return total_score
 
     @property
     def auth_key(self):
@@ -54,16 +62,35 @@ class Player:
             self.world_loc = next_room.world_loc
             return True
         else:
-            print("You cannot move in that direction.")
             return False
 
     def drop_item(self, item_id):
+        """
+        Drops an item in the room.
+        
+        Returns:
+            player doesn't have item → False
+            successful drop → chatmessage for the room
+        """
         if item_id not in self.items:
             return False
         item = self.items.pop(item_id)
-        return self.current_room.add_item(item)
+        self.current_room.add_item(item)
+        article = "some" if isinstance(item, Trash) else "a"
+        return f"{self.username} dropped {article} {item.name}"
 
     def take_item(self, item_id):
+        """
+        Takes an item from the room.
+        
+        If the player's new score is greater than the highscore,
+        also updates highscore.
+        
+        Returns:
+            item not in room → None
+            player's inventory too full → False
+            successful take → chatmessage for the room
+        """
         item_weight = self.current_room.get_item_weight(item_id)
         if item_weight is None:
             return None
@@ -71,7 +98,11 @@ class Player:
             return False
         item = self.current_room.remove_item(item_id)
         self.items[item.id] = item
-        return True
+        if self.score > self.highscore:
+            self.highscore = self.score
+            self.world.confirm_highscores(self)
+        article = "some" if isinstance(item, Trash) else "a"
+        return f"{self.username} took {article} {item.name}"
 
     def barter_item(self, item_id):
         if item_id not in self.items:
@@ -84,6 +115,7 @@ class Player:
             'username': self.username,
             'world_loc': self.world_loc,
             'weight': self.weight,
+            'score': self.score,
             'highscore': self.highscore,
             'items': [item.serialize() for item in self.items.values()]
         }
