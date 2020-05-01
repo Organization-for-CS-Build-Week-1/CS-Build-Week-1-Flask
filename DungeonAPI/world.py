@@ -48,7 +48,7 @@ class World:
             return {'error': "Username already exists"}
 
         password_hash = bcrypt.hashpw(password1.encode(), self.password_salt)
-        world_loc = list(self.rooms.keys())[0]
+        world_loc = random.choice(list(self.rooms.keys()))
 
         # Add user to DB first to get player id
         new_user = Users(username, password_hash, username == config("ADMIN_USERNAME"),
