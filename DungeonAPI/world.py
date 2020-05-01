@@ -161,7 +161,7 @@ class World:
         else:
             # If the player is not in the highscores,
             # Check if their highscore places them in the top three
-            for i in range(2):
+            for i in range(3):
                 if self.highscores[i] is None or player.highscore > self.highscores[i].highscore:
                     # If you find a highscore lower than the player, or
                     # the compared spot is None, stick the player in there
