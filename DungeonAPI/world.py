@@ -4,7 +4,7 @@ import bcrypt
 from flask_socketio import emit
 from decouple import config
 
-from .room import room_db_to_class
+from .room import room_db_to_class, Store
 from .player import Player
 from .map import Map
 from .item import db_to_class
@@ -191,8 +191,8 @@ class World:
         """
         rooms, stores = [], []
         for room_coord in self.rooms.keys():
-            # if isinstance(self.rooms[room_coord], Store):
-            #     stores.append(room_coord)
+            if isinstance(self.rooms[room_coord], Store):
+                stores.append(room_coord)
             rooms.append(room_coord)
 
         return {"rooms": rooms, "stores": stores}
