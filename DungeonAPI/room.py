@@ -6,14 +6,17 @@ from .models import DB, Items
 
 class Room:
 
-    def __init__(self, world, name, description, world_loc, loc_name=None, id=0, items=None):
-        self.id          = id
-        self.world       = world
-        self.name        = name
-        self.description = description
-        self.world_loc   = world_loc
-        self.loc_name    = loc_name
-        self.items       = items if items is not None else {}
+    def __init__(self, world, name, description, world_loc, loc_name=None, id=0, items=None, minutes_to_wait=20, item_max=10):
+        self.id              = id
+        self.world           = world
+        self.name            = name
+        self.description     = description
+        self.world_loc       = world_loc
+        self.loc_name        = loc_name
+        self.last_reset      = datetime.now()
+        self.minutes_to_wait = minutes_to_wait
+        self.item_max        = item_max
+        self.items           = items if items is not None else {}
 
     def serialize(self):
         return {
@@ -84,13 +87,39 @@ class Room:
     def remove_item(self, item_id):
         return self.items.pop(item_id)
 
+    def set_inventory(self):
+        """Resets a Room's inventory based to its max capacity"""
+        potential_items = [Trash(random.randint(0, 10**8)) for _ in range(10)]
+        potential_items += [Stick(random.randint(0, 10**8)) for _ in range(10)]
+        potential_items += [Hammer(random.randint(0, 10**8)) for _ in range(5)]
+        potential_items += [Gem(random.randint(0, 10**8)) for _ in range(1)]
+
+        inventory = [i for i in random.choices(
+            potential_items, k=self.item_max)]
+        Items.query.filter_by(room_id=self.id).delete()
+        DB.session.commit()
+        items = [Items(i.name, i.weight, i.score, room_id=self.id)
+                 for i in inventory]
+        DB.session.bulk_save_objects(items)
+        DB.session.commit()
+        items = Items.query.filter_by(room_id=self.id).all()
+        self.items = {i.id: db_to_class(i) for i in items}
+
+    def check_inventory_reset(self):
+        now = datetime.now()
+        reset_time = self.last_reset + timedelta(minutes=self.minutes_to_wait)
+        if now > reset_time and (len(self.items) < self.item_max // 2 or len(self.items) > 35):
+            self.last_reset = now
+            self.set_inventory()
+
 
 class Tunnel(Room):
 
     def __init__(self, world, world_loc, loc_name=None, id=0, items=None):
         name        = f"Tunnel segment {world_loc[0]}-{world_loc[1]}"
         description = "An underground tunnel. Where does it lead? Continue to find out!"
-        super().__init__(world, name, description, world_loc, loc_name, id, items)
+        super().__init__(world, name, description, world_loc,
+                         loc_name, id, items, minutes_to_wait=30, item_max=4)
 
 
 class DeadEnd(Room):
@@ -98,7 +127,8 @@ class DeadEnd(Room):
     def __init__(self, world, world_loc, loc_name=None, id=0, items=None):
         name = f"Dead end {world_loc[0]}-{world_loc[1]}"
         description = "A dead end. Some thoughtless ant built a tunnel to nowhere! Better turn around."
-        super().__init__(world, name, description, world_loc, loc_name, id, items)
+        super().__init__(world, name, description, world_loc,
+                         loc_name, id, items, minutes_to_wait=30, item_max=2)
 
 
 class Store(Room):
@@ -106,13 +136,12 @@ class Store(Room):
     def __init__(self, world, world_loc, loc_name=None, id=0, items=None):
         name = "Ant Store"
         description = "A fabulous store where you can buy all things ant!"
-        super().__init__(world, name, description, world_loc, loc_name, id, items)
-        self.last_reset = datetime.now()
+        super().__init__(world, name, description, world_loc,
+                         loc_name, id, items, minutes_to_wait=15)
         if items is None:
-            self.set_inventory()
+            self.set_inventory(reset=None)
 
     def set_inventory(self, reset=None):
-        print(reset)
         potential_inventory = [
             [Trash(random.randint(0, 10**8)) for _ in range(15)],
             [Stick(random.randint(0, 10**8)) for _ in range(15)],
@@ -134,7 +163,7 @@ class Store(Room):
 
     def check_inventory_reset(self):
         now = datetime.now()
-        if now > self.last_reset + timedelta(minutes=0.1):
+        if now > self.last_reset + timedelta(minutes=self.minutes_to_wait):
             self.last_reset = now
             self.set_inventory(True)
 
