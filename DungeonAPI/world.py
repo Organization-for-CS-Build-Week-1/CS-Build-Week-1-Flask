@@ -138,11 +138,12 @@ class World:
         send_scores = False
 
         in_highscores = False
-        for p in self.highscores:
+        for i in range(len(self.highscores)):
             # Check whether our current player is
             # already in our highscore roster
-            if isinstance(p, Player) and p.id == player.id:
+            if isinstance(self.highscores[i], Player) and self.highscores[i].id == player.id:
                 in_highscores = True
+                self.highscores[i] = player
 
         if in_highscores:
             # If the player is in the highscores array
