@@ -92,12 +92,14 @@ class Tunnel(Room):
         description = "An underground tunnel. Where does it lead? Continue to find out!"
         super().__init__(world, name, description, world_loc, loc_name, id, items)
 
+
 class DeadEnd(Room):
 
     def __init__(self, world, world_loc, loc_name=None, id=0, items=None):
         name = f"Dead end {world_loc[0]}-{world_loc[1]}"
         description = "A dead end. Some thoughtless ant built a tunnel to nowhere! Better turn around."
         super().__init__(world, name, description, world_loc, loc_name, id, items)
+
 
 class Store(Room):
 
@@ -109,7 +111,7 @@ class Store(Room):
         if items is None:
             self.set_inventory()
 
-    def set_inventory(self):
+    def set_inventory(self, reset=None):
         potential_inventory = [
             [Trash(random.randint(0, 10**8)) for _ in range(15)],
             [Stick(random.randint(0, 10**8)) for _ in range(15)],
@@ -117,18 +119,20 @@ class Store(Room):
             [Hammer(random.randint(0, 10**8)) for _ in range(15)]
         ]
         inventory = random.choice(potential_inventory)
-        self.items = {}
-        for i in inventory:
-            item = Items(i.name, i.weight, i.score)
-            DB.session.add(item)
+        if reset:
+            items = [Items(i.name, i.weight, i.score, room_id=self.id)
+                     for i in inventory]
+            DB.session.bulk_save_objects(items)
             DB.session.commit()
-            self.items[item.id] = db_to_class(item)
+            self.items = {i.id: db_to_class(i) for i in items}
+        else:
+            self.items = {i.id: db_to_class(i) for i in inventory}
 
     def barter_item(self, item_id, barter_value):
         now = datetime.now()
         if now > self.last_reset + timedelta(minutes=10):
             self.last_reset = now
-            self.set_inventory()
+            self.set_inventory(True)
         item = self.items.get(item_id)
         if not item:
             return None
@@ -136,17 +140,17 @@ class Store(Room):
             return False
         return item
 
+
 def room_db_to_class(world, model_info, items):
     """Function that takes in DB information and returns the correct Room class"""
     name = model_info.name.lower()
     world_loc = (model_info.x, model_info.y)
     if "tunnel" in name:
-        return Tunnel(world, world_loc, id=model_info.id, items = items)
+        return Tunnel(world, world_loc, id=model_info.id, items=items)
     elif "dead end" in name:
-        return DeadEnd(world, world_loc, id=model_info.id, items = items)
+        return DeadEnd(world, world_loc, id=model_info.id, items=items)
     elif "store" in name:
-        return Store(world, world_loc, id=model_info.id, items = items)
+        return Store(world, world_loc, id=model_info.id, items=items)
     else:
         return Room(world, model_info.name, model_info.description, world_loc,
-                    id=model_info.id, items = items)
-
+                    id=model_info.id, items=items)
