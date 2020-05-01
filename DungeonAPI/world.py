@@ -210,6 +210,7 @@ class World:
 
         User data is preserved.
         """
+        print(len(self.rooms))
         Items.__table__.drop(DB.engine, checkfirst=True)
         Worlds.__table__.drop(DB.engine, checkfirst=True)
         Rooms.__table__.drop(DB.engine, checkfirst=True)
@@ -220,17 +221,18 @@ class World:
 
         new_world = Worlds(self.password_salt, self.map_seed)
         DB.session.add(new_world)
-
+        print(new_world)
         DB.session.commit()
-
+        print(new_world.id)
         items = []
 
         for r in self.rooms.values():
             new_room = Rooms(r.name, r.description,
                              r.world_loc[0], r.world_loc[1])
+            print(new_room)
             DB.session.add(new_room)
             DB.session.commit()
-
+            print(new_room.id)
             for i in r.items.values():
                 new_item = Items(i.name, i.weight, i.score,
                                  room_id=new_room.id)
