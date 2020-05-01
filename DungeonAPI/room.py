@@ -116,7 +116,7 @@ class Store(Room):
             [Gem(random.randint(0, 10**8)) for _ in range(15)],
             [Hammer(random.randint(0, 10**8)) for _ in range(15)]
         ]
-        inventory = random.choices(potential_inventory)
+        inventory = random.choice(potential_inventory)
         self.items = {}
         for i in inventory:
             item = Items(i.name, i.weight, i.score)
