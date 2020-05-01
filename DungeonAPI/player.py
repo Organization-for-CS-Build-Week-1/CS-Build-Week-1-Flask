@@ -4,6 +4,7 @@ from threading import Thread
 from flask import current_app
 from flask_socketio import emit
 from .item import Trash
+from .room import Store
 from .models import update_items_db
 
 
@@ -63,6 +64,8 @@ class Player:
     def travel(self, direction, show_rooms=False):
         next_room = self.current_room.get_room_in_direction(direction)
         if next_room is not None:
+            if isinstance(next_room, Store):
+                next_room.check_inventory_reset()
             self.world_loc = next_room.world_loc
             return True
         else:

@@ -121,23 +121,24 @@ class Store(Room):
         ]
         inventory = random.choice(potential_inventory)
         if reset:
-            item_delete = Items.query.filter_by(room_id=self.id).delete()
+            Items.query.filter_by(room_id=self.id).delete()
             DB.session.commit()
             items = [Items(i.name, i.weight, i.score, room_id=self.id)
                      for i in inventory]
             DB.session.bulk_save_objects(items)
             DB.session.commit()
             items = Items.query.filter_by(room_id=self.id).all()
-            print(items)
             self.items = {i.id: db_to_class(i) for i in items}
         else:
             self.items = {i.id: db_to_class(i) for i in inventory}
 
-    def barter_item(self, item_id, barter_value):
+    def check_inventory_reset(self):
         now = datetime.now()
         if now > self.last_reset + timedelta(minutes=0.1):
             self.last_reset = now
             self.set_inventory(True)
+
+    def barter_item(self, item_id, barter_value):
         item = self.items.get(item_id)
         if not item:
             return None
