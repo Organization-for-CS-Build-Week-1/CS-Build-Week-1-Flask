@@ -1,188 +1,106 @@
-# CS Build Week 1
+# The Ant's Knapsack
 
-For your first CS Build Week, you will be building an interactive ***Multi-User Dungeon (MUD)*** client and server in groups. To succeed with this project, you will be applying knowledge you've learned throughout the first part of CS to this project.
+A multiplayer adventure game in which you scramble around, ant-like, collecting items in a valiant attempt to solve [the knapsack problem](https://en.wikipedia.org/wiki/Knapsack_problem). Try to maximize your points . . . but keep your weight under 100, little ant!
+​
 
-You should treat this like a real-world job assignment with your instructor as the client. Like in the real world, you may not be given all the information you need to complete the assignment up front. It is your responsibility to understand the requirements and ask questions if anything is unclear (UPER) before jumping into the code.
+Play the game [here](https://the-ants-knapsack.netlify.app/)!
 
-### What is a MUD?
->A MUD...is a multiplayer real-time virtual world, usually text-based. MUDs combine elements of role-playing games, hack and slash, player versus player, interactive fiction, and online chat. Players can read or view descriptions of rooms, objects, other players, non-player characters, and actions performed in the virtual world. Players typically interact with each other and the world by typing commands that resemble a natural language. - Wikipedia
+<img src="./DungeonAPI/img/gameplay.gif">​
 
-With the adventure game built in previous weeks, you have already created an application containing some of these elements (rooms, descriptions, objects, players, etc.). In this project, we will be expanding these worlds to be more interactive, provide new actions for players, display world info on a professional client site, and run the world's server on a hosted site to allow multi-player functionality.
+# Table of Contents
 
-## Deliverables
+- [Getting Started](#getting-started)
+- [Contributors](#contributors)
+- [Tech Stack](#tech-stack)
+- [Contributing](#contributing)
+  ​
 
-Each team is responsible for building and deploying a functional MUD server, migrating a unique world onto that server, and creating a visualization and navigation client interface. We provide starter Flask code with much of the server functionality implemented.
+## Getting Started
 
+You need python 3.7 to run this server locally. [Click here](https://www.python.org/downloads/) to download python 3.7 if you don't have it already.
 
-### Server
+- Clone this repo.
 
+  ```sh
+  git clone https://github.com/Organization-for-CS-Build-Week-1/CS-Build-Week-1-Flask.git
+  ```
 
-#### 1. Learn Flask
+- Navigate to the directory where you cloned this repo, and install dependencies. If you are using pipenv or virtualenv, you will need to initialize the shell first.
 
-In Sprint 1, you learned a new language (Python) and built an interactive world with it. During this project, you will be learning a new REST API framework (Flask) and building a more interesting world.
+  ```sh
+  pip install
+  ```
 
+- Once all dependencies are installed, run python in the _root directory._
 
-#### 2. Implement Login
+  ```sh
+  python3 __init__.py
+  ```
 
-You have been given code for Registration but will need to implement login and token authentication in Flask.
 
-Token authentication should be identical to the Django version of the project. As in, registration and login should return 40-character authentication key which must be passed in the header of every subsequent authenticated API request.
+## Contributors
 
+|                                                           [Anthony Hart](https://github.com/AHartNtkn)                                                            |                                                           [Devin Warrick](https://github.com/DevWarr)                                                            |                                                             [Dan Hauer](https://github.com/dlhauer)                                                              |                                                        [Michelangelo Markus](https://github.com/michelangelo17)                                                         |                                                       [Katie Embrey-Farquhar](https://github.com/kmcknight1)                                                        |
+| :---------------------------------------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| [<img src="https://avatars3.githubusercontent.com/u/6405468?s=460&u=b185cc404e4d5ebdece5d6b579439a5e0d8a1a9d&v=4" width = "200" />](https://github.com/AHartNtkn) | [<img src="https://avatars2.githubusercontent.com/u/49497246?s=460&u=2a0231a3d8358559c3bc7eb6c5617b1549da7582&v=4" width = "200" />](https://github.com/DevWarr) | [<img src="https://avatars0.githubusercontent.com/u/50860480?s=460&u=ab6997720219f59a214336ceb6088c308749c1f8&v=4" width = "200" />](https://github.com/dlhauer) | [<img src="https://avatars2.githubusercontent.com/u/13295777?s=460&u=dcefae3edd0fa32a658bf3731de2b61ad23bf7b5&v=4" width = "200" />](https://github.com/michelangelo17) | [<img src="https://avatars1.githubusercontent.com/u/47987809?s=460&u=16775e454c44054b8c7c88b4a2a899e78228df35&v=4" width = "200" />](https://github.com/kmcknight1) |
 
-#### 3. Implement Item classes
+​
+<br>
+​
+![MIT](https://img.shields.io/packagist/l/doctrine/orm.svg)
+[![Flask](https://img.shields.io/badge/flask-v1.1.2-blue.svg)](https://flask.palletsprojects.com/en/1.1.x/)
+​
+​
 
-Similar to your Intro to Python adventure project, the Item base class should be able to be picked up and dropped, bought and sold. You are required to have at least 2 types of Item subclasses.
+## Tech Stack
 
-Suggestions for item subclasses:
-  - Food
-  - Clothing
-  - Light Source
-  - Weapon
+| Back End                                             | Front End                         |
+| ---------------------------------------------------- | --------------------------------- |
+| [Flask](https://flask.palletsprojects.com/en/1.1.x/) | [PixiJS](https://www.pixijs.com/) |
+| [Socket.IO](https://socket.io/)                      |
 
+<br>
 
-#### 4. Implement Store
+## Contributing
 
-You must create a store where items can be bought and sold.
+​
+When contributing to this repository, please first discuss the change you wish to make via issue, email, or any other method with the owners of this repository before making a change.
+​
+Please note we have a [code of conduct](./CODE_OF_CONDUCT.md). Please follow it in all your interactions with the project.
+​
 
+### Issue/Bug Request
 
-#### 5. Implement Pusher Websockets
+​
+**If you are having an issue with the existing project code, please submit a bug report under the following guidelines:**
+​
 
-Your server should create websocket connections with each client upon initialization and broadcast messages where appropriate.
+- Check first to see if your issue has already been reported.
+- Check to see if the issue has recently been fixed by attempting to reproduce the issue using the latest master branch in the repository.
+- Create a live example of the problem.
+- Submit a detailed bug report including your environment & browser, steps to reproduce the issue, actual and expected outcomes, where you believe the issue is originating from, and any potential solutions you have considered.
+  ​
 
-This NOT a stretch goal and is required for MVP.
+### Feature Requests
 
+We would love to hear from you about new features which would improve this app and further the aims of our project. Please provide as much detail and information as possible to show us why you think your new feature should be implemented.
+​
 
-#### 6. Create an interesting world on the server
+### Pull Requests
 
-You will need to create more rooms and descriptions to build a unique, traversable world that your client apps can interact with via REST API calls.
+If you have developed a patch, bug fix, or new feature that would improve this app, please submit a pull request. It is best to communicate your ideas with the developers first before investing a great deal of time into a pull request to ensure that it will mesh smoothly with the project.
+​
+Remember that this project is licensed under the MIT license, and by submitting a pull request, you agree that your work will be, too.
+​
 
-Your world should contain a MINIMUM of 100 connected rooms.
+#### Pull Request Guidelines
 
-You will also need to implement a GET `rooms` API endpoint for clients to fetch all rooms to display a map on the frontend.
+- Ensure any install or build dependencies are removed before the end of the layer when doing a build.
+- Update the README.md with details of changes to the interface, including new plist variables, exposed ports, useful file locations and container parameters.
+- Ensure that your code conforms to our existing code conventions and test coverage.
+- Include the relevant issue number, if applicable.
+- You may merge the Pull Request in once you have the sign-off of two other developers, or if you do not have permission to do that, you may request the second reviewer to merge it for you.
 
+### Attribution
 
-#### 7. Deploy a Flask LambdaMUD server
-
-Research and deploy your Flask server on Heroku.
-
-
-### Client
-
-#### 1. Deploy a LambdaMUD client that connects to the test server
-
-While your backend developers are implementing your production server, you may test your endpoints on the test server hosted at `https://lambda-mud-test.herokuapp.com/`. You can use this to test your interface for account registration, login, movement and map display. (See sample API commands below.) Your app should store the user's auth token upon successful registration/authentication and use it to authenticate subsequent API requests.
-
-#### 2. Connect your LambdaMUD client to the production server
-
-Once your backend is up and running, you should be able to swap out the test host URL for your production URL and interact with your production server.
-
-#### 3. Display a visual map of the world
-
-Your backend should implement a `rooms` endpoint which will return data for every room in your world. Your job will be to build a map to display a map of those rooms, along with relevant information, like marking which room the player is currently in.
-
-#### 4. Implement Store and Inventory functionality
-
-Create an interface to pick up and drop items, and buy and sell them from a store.
-
-#### 5. Implement client "hearing" (Brady walks in from the north) and chat using the Pusher websocket library.
-
-This NOT a stretch goal and is required for MVP.
-
-
-
-## API Requirements
-
-These are implemented on the test server: `https://lambda-mud-test.herokuapp.com/`.
-
-### Registration
-* `curl -X POST -H "Content-Type: application/json" -d '{"username":"testuser", "password1":"testpassword", "password2":"testpassword"}' localhost:8000/api/registration/`
-* Response:
-  * `{"key":"6b7b9d0f33bd76e75b0a52433f268d3037e42e66"}`
-
-### Login
-* Request:
-  * `curl -X POST -H "Content-Type: application/json" -d '{"username":"testuser", "password":"testpassword"}' localhost:8000/api/login/`
-* Response:
-  * `{"key":"6b7b9d0f33bd76e75b0a52433f268d3037e42e66"}`
-
-### Initialize
-* Request:  (Replace token string with logged in user's auth token)
-  * `curl -X GET -H 'Authorization: Token 6b7b9d0f33bd76e75b0a52433f268d3037e42e66' localhost:8000/api/adv/init/`
-* Response:
-  * `{"uuid": "c3ee7f04-5137-427e-8591-7fcf0557dd7b", "name": "testuser", "title": "Outside Cave Entrance", "description": "North of you, the cave mount beckons", "players": []}`
-
-### Move
-* Request:  (Replace token string with logged in user's auth token)
-  * `curl -X POST -H 'Authorization: Token 6b7b9d0f33bd76e75b0a52433f268d3037e42e66' -H "Content-Type: application/json" -d '{"direction":"n"}' localhost:8000/api/adv/move/`
-* Response:
-  * `{"name": "testuser", "title": "Foyer", "description": "Dim light filters in from the south. Dusty\npassages run north and east.", "players": [], "error_msg": ""}`
-* Pusher broadcast (stretch):
-  * Players in previous room receive a message: `<name> has walked north.`
-  * Players in next room receive a message: `<name> has entered from the south.`
-
-### Say
-* Request:  (Replace token string with logged in user's auth token)
-  * `curl -X POST -H 'Authorization: Token 6b7b9d0f33bd76e75b0a52433f268d3037e42e66' -H "Content-Type: application/json" -d '{"message":"Hello, world!"}' localhost:8000/api/adv/say/`
-* Pusher broadcast:
-  * Players in current room receive a message: `<name> says "Hello, world!"`
-
-## Pusher
-
-WebSocket is a computer communications protocol, providing full-duplex communication channels over a single TCP connection. You may use the Pusher service to handle the WebSocket connections as a stretch goal for your project. You can read more about them [here](https://pusher.com/websockets).
-
-### Set up a Pusher account
-* Sign up for a free account on pusher.com
-* Create a new app
-* Take note of your credentials
-  * app_id, key, secret, cluster
-* Look through the provided sample code and documentation
-
-
-## FAQs and Troubleshooting
-
-### 1. Can you show me an example of a map visualization?
-
-Here's a sample project created by [a team in CSPT2](https://confident-wright-ca0176.netlify.com):
-
-![Lambda MUD 1](img/pt2_lambdamud.png)
-
-And here's [a FT team](https://lambdaschool.com/lab-demos/lambda-mud) that went above and beyond with their use of graphics:
-
-![Lambda MUD 2](img/ex_lambdamud.png)
-
-And here's an example on iOS:
-
-![Lambda MUD Mobile](img/ios_lambdamud.jpg)
-
-### 2. How do I build something like that?
-
-Think about the algorithm to draw your map. It will probably be something like this:
-
-```
-def draw_map():
-    # Get all rooms
-    # For each room in rooms...
-        # Draw the room
-        # Draw each exit
-```
-
-What data do you need to implement this? A list of rooms, their exits, maybe their positions? The server should return all the information you need from the `rooms` endpoint. Note that backend developers may need to define some fields in the `Room` model that do not exist yet.
-
-### 3. How do I "create an interesting world"?
-
-I'll leave that to you to determine.
-
-
-### 4. What is Pusher?
-
-Pusher is a cross-platform websocket library. This will allow you to turn your app into a real MUD with live push notifications to your client. You can consider integration to be a stretch goal but it's worth the effort if you have the time: websockets are powerful!
-
-
-### 5. What will the `rooms` API endpoint look like?
-
-It's up to you what data the request will return but the API request should be something like this:
-
-```
-curl -X GET -H 'Authorization: Token cc504e88ef659843b858d61c101ca9d4f0edf979' http://lambda-mud-test.herokuapp.com/api/adv/rooms/
-```
-
+These contribution guidelines have been adapted from [this good-Contributing.md-template](https://gist.github.com/PurpleBooth/b24679402957c63ec426).
