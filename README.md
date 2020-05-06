@@ -17,10 +17,26 @@ Play the game [here](https://the-ants-knapsack.netlify.app/)!
 
 ## Getting Started
 
-1. Do something with Flask.
-2. Environment variables.
-3. You're good to go!
-   ​
+You need python 3.7 to run this server locally. [Click here](https://www.python.org/downloads/) to download python 3.7 if you don't have it already.
+
+- Clone this repo.
+
+  ```sh
+  git clone https://github.com/Organization-for-CS-Build-Week-1/CS-Build-Week-1-Flask.git
+  ```
+
+- Navigate to the directory where you cloned this repo, and install dependencies. If you are using pipenv or virtualenv, you will need to initialize the shell first.
+
+  ```sh
+  pip install
+  ```
+
+- Once all dependencies are installed, run python in the _root directory._
+
+  ```sh
+  python3 __init__.py
+  ```
+
 
 ## Contributors
 
