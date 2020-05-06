@@ -11,8 +11,8 @@ Play the game [here](https://the-ants-knapsack.netlify.app/)!
 
 - [Getting Started](#getting-started)
 - [Contributors](#contributors)
-- [Project Overview](#project-overview)
 - [Tech Stack](#tech-stack)
+- [Contributing](#contributing)
   ​
 
 ## Getting Started
@@ -43,7 +43,9 @@ Play the game [here](https://the-ants-knapsack.netlify.app/)!
 | [Flask](https://flask.palletsprojects.com/en/1.1.x/) | [PixiJS](https://www.pixijs.com/) |
 | [Socket.IO](https://socket.io/)                      |
 
-# Contributing
+<br>
+
+## Contributing
 
 ​
 When contributing to this repository, please first discuss the change you wish to make via issue, email, or any other method with the owners of this repository before making a change.
@@ -51,7 +53,7 @@ When contributing to this repository, please first discuss the change you wish t
 Please note we have a [code of conduct](./CODE_OF_CONDUCT.md). Please follow it in all your interactions with the project.
 ​
 
-## Issue/Bug Request
+### Issue/Bug Request
 
 ​
 **If you are having an issue with the existing project code, please submit a bug report under the following guidelines:**
