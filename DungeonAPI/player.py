@@ -17,7 +17,8 @@ class Player:
         self.uuid          = uuid.uuid4
         self.admin_q       = admin_q
 
-        self.room_loc      = (150, 150, 0, 0)  # Starting location (x, y, vx, vy)
+        self.room_loc      = {'x': 150, 'y': 150,
+                              'vx': 0, 'vy': 0}  # Location and velocity
         self.world         = world
         self.world_loc     = world_loc  # tuple of coordinates in world (x, y)
         self.max_weight    = 100
@@ -67,15 +68,23 @@ class Player:
         if next_room is not None:
             next_room.check_inventory_reset()
             self.world_loc = next_room.world_loc
+            if direction == "n":
+                self.room_loc['y'] = 440
+            if direction == "s":
+                self.room_loc['y'] = 60
+            if direction == "w":
+                self.room_loc['x'] = 440
+            if direction == "e":
+                self.room_loc['x'] = 60
             return True
         else:
             return False
 
     def move(self, vx, vy):
-        old_x = self.room_loc[0]
-        old_y = self.room_loc[1]
-
-        self.room_loc = (old_x + vx, old_y + vy, vx, vy)
+        self.room_loc['x'] += vx
+        self.room_loc['y'] += vy
+        self.room_loc['vx'] = vx
+        self.room_loc['vy'] = vy
 
     def drop_item(self, item_id):
         """
