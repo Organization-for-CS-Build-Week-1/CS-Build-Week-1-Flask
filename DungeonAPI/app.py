@@ -18,6 +18,16 @@ from .models import DB, Users, Items, Worlds, Rooms
 
 def create_app():
 
+    def movement_update(players):
+        """
+        Emits info via socket to all players
+        in the same room as the given player.
+
+        Used to handle movement for all players.
+        """
+        response = {player.auth_key: player.room_loc for player in players}
+        return emit("movementupdate", response, room=str(players[0].world_loc))
+
     def room_update(player, chatmessage, chat_only=False):
         """
         Emits info via socket to all players
@@ -140,7 +150,7 @@ def create_app():
     @socketio.on("connect")
     def connect():
         print_socket_info(request.sid, "Joined the server.")
-        emit("connected", "hello")
+        emit("connected", request.sid)
 
     @socketio.on("disconnect")
     def disconnect():
@@ -272,6 +282,15 @@ def create_app():
 
     @socketio.on('move')
     @player_in_world
+    def move(player, movement, *_, **__):
+        vx = movement["vx"]
+        vy = movement["vy"]
+        print_socket_info(request.sid, f"velocity:({vx}, {vy})")
+        player.move(vx, vy)
+        return movement_update([player])
+
+    @socketio.on('travel')
+    @player_in_world
     def move(player, direction=None, *_, **__):
         print_socket_info(request.sid, direction)
 
@@ -362,11 +381,11 @@ def create_app():
         print_socket_info(request.sid, data)
 
         bad_format = {
-                'error': 'Please provide a valid data dictionary.',
-                'required': '{"player_item_ids": int[], "store_item_id": int}'
-            }
+            'error': 'Please provide a valid data dictionary.',
+            'required': '{"player_item_ids": int[], "store_item_id": int}'
+        }
 
-        if not  isinstance(data, dict):
+        if not isinstance(data, dict):
             return emit('barterError', bad_format)
 
         player_item_ids = data.get('player_item_ids')
@@ -395,7 +414,7 @@ def create_app():
                 return emit('full', response)
             else:
                 return emit('barterError', response)
-        
+
         emit('playerupdate', player.serialize())
         return room_update(player, response.get('chat'))
 
