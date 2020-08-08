@@ -81,8 +81,20 @@ class Player:
             return False
 
     def move(self, vx, vy):
-        self.room_loc['x'] += vx
-        self.room_loc['y'] += vy
+        new_x = self.room_loc['x'] + vx
+        if new_x < 50:
+            new_x = 50
+        if new_x > 450:
+            new_x = 450
+
+        new_y = self.room_loc['y'] + vy
+        if new_y < 40:
+            new_y = 40
+        if new_y > 450:
+            new_y = 450
+
+        self.room_loc['x'] = new_x
+        self.room_loc['y'] = new_y
         self.room_loc['vx'] = vx
         self.room_loc['vy'] = vy
 
