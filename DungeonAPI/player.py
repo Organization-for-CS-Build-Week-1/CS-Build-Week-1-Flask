@@ -17,6 +17,7 @@ class Player:
         self.uuid          = uuid.uuid4
         self.admin_q       = admin_q
 
+        self.room_loc      = (150, 150, 0, 0)  # Starting location (x, y, vx, vy)
         self.world         = world
         self.world_loc     = world_loc  # tuple of coordinates in world (x, y)
         self.max_weight    = 100
@@ -69,6 +70,12 @@ class Player:
             return True
         else:
             return False
+
+    def move(self, vx, vy):
+        old_x = self.room_loc[0]
+        old_y = self.room_loc[1]
+
+        self.room_loc = (old_x + vx, old_y + vy, vx, vy)
 
     def drop_item(self, item_id):
         """
@@ -159,6 +166,7 @@ class Player:
             'id': self.id,
             'username': self.username,
             'world_loc': self.world_loc,
+            'room_loc': self.room_loc,
             'weight': self.weight,
             'score': self.score,
             'highscore': self.highscore,
