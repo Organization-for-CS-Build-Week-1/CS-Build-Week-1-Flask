@@ -8,6 +8,8 @@ from .room import room_db_to_class, Store
 from .player import Player
 from .map import Map
 from .item import db_to_class
+from .movement_queue import MovementQueue
+
 
 from .models import *
 
@@ -18,12 +20,16 @@ class World:
         # rooms   { key: Room.world_loc,  value: Room }
         # players { key: Player.auth_key, value: Player }
 
-        self.password_salt = bcrypt.gensalt()
-        self.rooms         = {}
-        self.players       = {}
-        self.highscores    = [None, None, None]
-        self.loaded        = False
-        self.map_seed      = map_seed
+        self.password_salt  = bcrypt.gensalt()
+        self.rooms          = {}
+        self.players        = {}
+        self.highscores     = [None, None, None]
+        self.loaded         = False
+        self.map_seed       = map_seed
+        self.movement_queue = MovementQueue()
+
+    def add_to_movement_queue(self, item):
+        self.movement_queue.add(item)
 
     def add_player(self, username, password1, password2, socketid=None):
         """
