@@ -18,16 +18,6 @@ from .models import DB, Users, Items, Worlds, Rooms
 
 def create_app():
 
-    def movement_update(players):
-        """
-        Emits info via socket to all players
-        in the same room as the given player.
-
-        Used to handle movement for all players.
-        """
-        response = {player.auth_key: player.room_loc for player in players}
-        return emit("movementupdate", response, room=str(players[0].world_loc))
-
     def room_update(player, chatmessage, chat_only=False):
         """
         Emits info via socket to all players
@@ -285,9 +275,7 @@ def create_app():
     def move(player, movement, *_, **__):
         vx = movement["vx"]
         vy = movement["vy"]
-        print_socket_info(request.sid, f"velocity:({vx}, {vy})")
-        player.move(vx, vy)
-        return movement_update([player])
+        world.add_to_movement_queue((player, vx, vy))
 
     @socketio.on('travel')
     @player_in_world
