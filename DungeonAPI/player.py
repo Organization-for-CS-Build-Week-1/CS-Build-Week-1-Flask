@@ -2,7 +2,7 @@ import random
 import uuid
 from threading import Thread
 from flask import current_app
-from flask_socketio import emit
+from flask_socketio import emit, leave_room, join_room
 from .item import Trash
 from .room import Store
 from .models import update_items_db
@@ -65,38 +65,63 @@ class Player:
 
     def travel(self, direction, show_rooms=False):
         next_room = self.current_room.get_room_in_direction(direction)
-        if next_room is not None:
-            next_room.check_inventory_reset()
-            self.world_loc = next_room.world_loc
-            if direction == "n":
-                self.room_loc['y'] = 440
-            if direction == "s":
-                self.room_loc['y'] = 60
-            if direction == "w":
-                self.room_loc['x'] = 440
-            if direction == "e":
-                self.room_loc['x'] = 60
-            return True
-        else:
-            return False
+        if next_room is None:
+            return
+
+        previous_room = str(self.world_loc)
+        next_room.check_inventory_reset()
+        self.world_loc = next_room.world_loc
+        if direction == "n":
+            self.room_loc['y'] = 440
+        if direction == "s":
+            self.room_loc['y'] = 60
+        if direction == "w":
+            self.room_loc['x'] = 440
+        if direction == "e":
+            self.room_loc['x'] = 60
+
+        leave_room(previous_room, sid=self.auth_key)
+        join_room(str(self.world_loc), sid=self.auth_key)
+
+        response = {
+            'room': self.current_room.serialize(),
+            'chat': f"{self.username} entered the room"
+        }
+        return emit("roomupdate", response, room=str(self.world_loc))
 
     def move(self, vx, vy):
         new_x = self.room_loc['x'] + vx
-        if new_x < 50:
-            new_x = 50
-        if new_x > 450:
-            new_x = 450
+        if new_x < 40:
+            new_x = 40
+        if new_x > 460:
+            new_x = 460
 
         new_y = self.room_loc['y'] + vy
         if new_y < 40:
             new_y = 40
-        if new_y > 450:
-            new_y = 450
+        if new_y > 460:
+            new_y = 460
 
         self.room_loc['x'] = new_x
         self.room_loc['y'] = new_y
         self.room_loc['vx'] = vx
         self.room_loc['vy'] = vy
+
+        possible_travel = self.travel_direction()
+        self.travel(possible_travel)
+
+    def travel_direction(self):
+        x = self.room_loc['x']
+        y = self.room_loc['y']
+
+        if 232 < x and x < 268 and y <= 50:
+            return 'n'
+        if 232 < x and x < 268 and y >= 450:
+            return 's'
+        if 232 < y and y < 268 and x <= 50:
+            return 'w'
+        if 232 < y and y < 268 and x >= 450:
+            return 'e'
 
     def drop_item(self, item_id):
         """
