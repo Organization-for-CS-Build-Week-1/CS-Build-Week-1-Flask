@@ -118,9 +118,9 @@ class Player:
             return 'n'
         if 232 < x and x < 268 and y >= 450:
             return 's'
-        if 232 < y and y < 268 and x <= 50:
+        if 220 < y and y < 268 and x <= 50:
             return 'w'
-        if 232 < y and y < 268 and x >= 450:
+        if 220 < y and y < 268 and x >= 450:
             return 'e'
 
     def drop_item(self, item_id):
