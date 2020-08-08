@@ -5,7 +5,7 @@ from time import time
 from uuid import uuid4
 
 from flask import Flask, jsonify, request, render_template
-from flask_socketio import SocketIO, emit, join_room, leave_room
+from flask_socketio import SocketIO, emit, join_room
 from decouple import config
 
 from .room import Room, Store
@@ -276,29 +276,6 @@ def create_app():
         vx = movement["vx"]
         vy = movement["vy"]
         world.add_to_movement_queue((player, vx, vy))
-
-    @socketio.on('travel')
-    @player_in_world
-    def move(player, direction=None, *_, **__):
-        print_socket_info(request.sid, direction)
-
-        if direction is None or not isinstance(direction, str) or direction not in "nsew":
-            return emit("moveError", {
-                "error": "You must move a direction: 'n', 's', 'e', 'w'"})
-
-        previous_room = str(player.world_loc)
-
-        if player.travel(direction):
-            # If the player travels successfully
-            leave_room(previous_room)
-            join_room(str(player.world_loc))
-            chatmessage = f"{player.username} entered the room"
-            return room_update(player, chatmessage)
-        else:
-            response = {
-                'error': "You cannot move in that direction.",
-            }
-            return emit("moveError", response)
 
     @socketio.on('take')
     @player_in_world
