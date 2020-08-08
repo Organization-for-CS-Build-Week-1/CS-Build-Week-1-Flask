@@ -29,9 +29,8 @@ class MovementQueue:
             player    = move[0]
             vx        = move[1]
             vy        = move[2]
-            world_loc = player.world_loc
-
             player.move(vx, vy)
+            world_loc = player.world_loc
 
             if world_loc not in worldy_moves:
                 worldy_moves[world_loc] = {}
