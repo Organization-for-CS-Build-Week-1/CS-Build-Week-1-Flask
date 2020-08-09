@@ -15,4 +15,3 @@ class Ticker:
             self.current = now
             return True
         return False
-
