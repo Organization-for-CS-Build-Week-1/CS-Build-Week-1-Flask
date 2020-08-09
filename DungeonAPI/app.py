@@ -275,7 +275,8 @@ def create_app():
     def move(player, movement, *_, **__):
         vx = movement["vx"]
         vy = movement["vy"]
-        world.add_to_movement_queue((player, vx, vy))
+        player.update_velocity(vx, vy)
+        world.check_tick()
 
     @socketio.on('take')
     @player_in_world

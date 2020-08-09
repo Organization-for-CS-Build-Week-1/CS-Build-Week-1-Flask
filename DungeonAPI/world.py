@@ -8,7 +8,7 @@ from .room import room_db_to_class, Store
 from .player import Player
 from .map import Map
 from .item import db_to_class
-from .movement_queue import MovementQueue
+from .ticker import Ticker
 
 
 from .models import *
@@ -26,10 +26,27 @@ class World:
         self.highscores     = [None, None, None]
         self.loaded         = False
         self.map_seed       = map_seed
-        self.movement_queue = MovementQueue()
+        self.ticker         = Ticker(0.015)
 
-    def add_to_movement_queue(self, item):
-        self.movement_queue.add(item)
+    def check_tick(self):
+        if self.ticker.did_tick():
+            self.move_all_and_emit()
+
+    def move_all_and_emit(self):
+        worldy_moves = {}
+
+        for player in self.players.values():
+            player.move()
+            world_loc = player.world_loc
+
+            if world_loc not in worldy_moves:
+                worldy_moves[world_loc] = {}
+
+            worldy_moves[world_loc][player.auth_key] = player.position
+
+        for world_loc in worldy_moves:
+            emit("movementupdate",
+                 worldy_moves[world_loc], room=str(world_loc))
 
     def add_player(self, username, password1, password2, socketid=None):
         """

@@ -17,7 +17,7 @@ class Player:
         self.uuid          = uuid.uuid4
         self.admin_q       = admin_q
 
-        self.room_loc      = {'x': 150, 'y': 150,
+        self.position      = {'x': 150, 'y': 150,
                               'vx': 0, 'vy': 0}  # Location and velocity
         self.world         = world
         self.world_loc     = world_loc  # tuple of coordinates in world (x, y)
@@ -72,13 +72,13 @@ class Player:
         next_room.check_inventory_reset()
         self.world_loc = next_room.world_loc
         if direction == "n":
-            self.room_loc['y'] = 440
+            self.position['y'] = 440
         if direction == "s":
-            self.room_loc['y'] = 60
+            self.position['y'] = 60
         if direction == "w":
-            self.room_loc['x'] = 440
+            self.position['x'] = 440
         if direction == "e":
-            self.room_loc['x'] = 60
+            self.position['x'] = 60
 
         leave_room(previous_room, sid=self.auth_key)
         join_room(str(self.world_loc), sid=self.auth_key)
@@ -89,30 +89,32 @@ class Player:
         }
         return emit("roomupdate", response, room=str(self.world_loc))
 
-    def move(self, vx, vy):
-        new_x = self.room_loc['x'] + vx
+    def update_velocity(self, vx, vy):
+        self.position['vx'] = vx
+        self.position['vy'] = vy
+
+    def move(self):
+        new_x = self.position['x'] + self.position['vx']
         if new_x < 40:
             new_x = 40
         if new_x > 460:
             new_x = 460
 
-        new_y = self.room_loc['y'] + vy
+        new_y = self.position['y'] + self.position['vy']
         if new_y < 40:
             new_y = 40
         if new_y > 460:
             new_y = 460
 
-        self.room_loc['x'] = new_x
-        self.room_loc['y'] = new_y
-        self.room_loc['vx'] = vx
-        self.room_loc['vy'] = vy
+        self.position['x'] = new_x
+        self.position['y'] = new_y
 
         possible_travel = self.travel_direction()
         self.travel(possible_travel)
 
     def travel_direction(self):
-        x = self.room_loc['x']
-        y = self.room_loc['y']
+        x = self.position['x']
+        y = self.position['y']
 
         if 232 < x and x < 268 and y <= 50:
             return 'n'
@@ -212,7 +214,7 @@ class Player:
             'id': self.id,
             'username': self.username,
             'world_loc': self.world_loc,
-            'room_loc': self.room_loc,
+            'position': self.position,
             'weight': self.weight,
             'score': self.score,
             'highscore': self.highscore,
