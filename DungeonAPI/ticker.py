@@ -9,9 +9,9 @@ class Ticker:
         self.tick = tick
         self.current = time.time()
 
-    def did_tick(self):
+    def get_ticks_and_update(self):
         now = time.time()
-        if now - self.current > self.tick:
+        ticks_passed = int((now - self.current) // self.tick)
+        if ticks_passed > 0:
             self.current = now
-            return True
-        return False
+        return ticks_passed

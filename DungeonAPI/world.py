@@ -29,14 +29,16 @@ class World:
         self.ticker         = Ticker(0.015)
 
     def check_tick(self):
-        if self.ticker.did_tick():
-            self.move_all_and_emit()
+        ticks_passed = self.ticker.get_ticks_and_update()
+        if ticks_passed > 0:
+            self.move_all_and_emit(ticks_passed)
 
-    def move_all_and_emit(self):
+    def move_all_and_emit(self, ticks_passed):
         worldy_moves = {}
 
         for player in self.players.values():
-            player.move()
+            for _ in range(ticks_passed):
+                player.move()
             world_loc = player.world_loc
 
             if world_loc not in worldy_moves:
